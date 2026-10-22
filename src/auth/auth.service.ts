@@ -2,33 +2,33 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ConfigsService } from '../config/configs.service';
 import { UnauthorizedException } from '../common/exceptions/app.exception';
-import { AdminsRepository } from './admins.repository';
 import { AuthTokensResponse } from './auth.types';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 import { TokenService } from './token.service';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly adminsRepository: AdminsRepository,
+    private readonly usersRepository: UsersRepository,
     private readonly refreshTokensRepository: RefreshTokensRepository,
     private readonly tokenService: TokenService,
     private readonly configs: ConfigsService,
   ) {}
 
   async login(dto: LoginDto): Promise<AuthTokensResponse> {
-    const admin = await this.adminsRepository.findByUsername(dto.username);
-    if (!admin || !admin.isActive) {
+    const user = await this.usersRepository.findByUsername(dto.username);
+    if (!user || !user.isActive) {
       throw new UnauthorizedException('INVALID_CREDENTIALS', 'Invalid username or password.');
     }
 
-    const passwordMatches = await bcrypt.compare(dto.password, admin.passwordHash);
+    const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordMatches) {
       throw new UnauthorizedException('INVALID_CREDENTIALS', 'Invalid username or password.');
     }
 
-    return this.tokenService.issueTokens({ id: admin.id, username: admin.username });
+    return this.tokenService.issueTokens({ id: user.id, username: user.username });
   }
 
   async refresh(refreshToken: string): Promise<AuthTokensResponse> {
@@ -49,13 +49,13 @@ export class AuthService {
       throw new UnauthorizedException('INVALID_REFRESH_TOKEN', 'Refresh token is revoked or expired.');
     }
 
-    const admin = await this.adminsRepository.findById(payload.sub);
-    if (!admin || !admin.isActive) {
-      throw new UnauthorizedException('ADMIN_INACTIVE', 'Admin account is not active.');
+    const user = await this.usersRepository.findById(payload.sub);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('USER_INACTIVE', 'User account is not active.');
     }
 
     await this.refreshTokensRepository.revoke(stored.id, new Date());
-    return this.tokenService.issueTokens({ id: admin.id, username: admin.username });
+    return this.tokenService.issueTokens({ id: user.id, username: user.username });
   }
 
   async logout(refreshToken: string): Promise<void> {

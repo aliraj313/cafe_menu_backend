@@ -21,9 +21,9 @@ export class RefreshTokensRepository {
     });
   }
 
-  revokeAllForAdmin(adminId: number, revokedAt: Date): Promise<Prisma.BatchPayload> {
+  revokeAllForUser(userId: number, revokedAt: Date): Promise<Prisma.BatchPayload> {
     return this.prisma.refreshToken.updateMany({
-      where: { adminId, revokedAt: null },
+      where: { userId, revokedAt: null },
       data: { revokedAt },
     });
   }

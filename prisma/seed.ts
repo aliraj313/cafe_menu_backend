@@ -17,7 +17,7 @@ async function main(): Promise<void> {
   const adminPassword = process.env.ADMIN_PASSWORD ?? 'changeme123';
 
   const passwordHash = await bcrypt.hash(adminPassword, BCRYPT_SALT_ROUNDS);
-  await prisma.admin.upsert({
+  await prisma.user.upsert({
     where: { username: adminUsername },
     update: {
       passwordHash,

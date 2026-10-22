@@ -14,7 +14,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Admin login with username and password' })
+  @ApiOperation({ summary: 'User login with username and password' })
   login(@Body() dto: LoginDto): Promise<AuthTokensResponse> {
     return this.authService.login(dto);
   }

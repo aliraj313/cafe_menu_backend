@@ -13,17 +13,17 @@ export class TokenService {
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
-  async issueTokens(admin: { id: number; username: string }): Promise<AuthTokensResponse> {
+  async issueTokens(user: { id: number; username: string }): Promise<AuthTokensResponse> {
     const accessPayload: AccessTokenPayload = {
-      sub: admin.id,
-      username: admin.username,
+      sub: user.id,
+      username: user.username,
       type: 'access',
     };
 
     const jti = randomUUID();
     const refreshPayload: RefreshTokenPayload = {
-      sub: admin.id,
-      username: admin.username,
+      sub: user.id,
+      username: user.username,
       type: 'refresh',
       jti,
     };
@@ -41,7 +41,7 @@ export class TokenService {
     const expiresAt = this.computeExpiryDate(this.configs.JWT.REFRESH.TTL);
     await this.refreshTokensRepository.create({
       tokenHash: this.hashToken(refreshToken),
-      adminId: admin.id,
+      userId: user.id,
       expiresAt,
     });
 
@@ -50,9 +50,9 @@ export class TokenService {
       refreshToken,
       tokenType: 'Bearer',
       expiresIn: this.configs.JWT.ACCESS.TTL,
-      admin: {
-        id: admin.id,
-        username: admin.username,
+      user: {
+        id: user.id,
+        username: user.username,
       },
     };
   }
@@ -70,7 +70,6 @@ export class TokenService {
   private computeExpiryDate(ttl: string): Date {
     const match = /^(\d+)([smhd])$/.exec(ttl.trim());
     if (!match) {
-      // Fallback: 7 days if TTL format is unexpected (should be validated via env in production configs).
       return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     }
     const amount = Number(match[1]);

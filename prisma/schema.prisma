@@ -18,28 +18,28 @@ enum PaymentGatewayProvider {
   ZARINPAL
 }
 
-model Admin {
-  id           Int            @id @default(autoincrement())
-  username     String         @unique
-  passwordHash String
-  isActive     Boolean        @default(true)
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  passwordHash  String
+  isActive      Boolean        @default(true)
   refreshTokens RefreshToken[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  @@map("admins")
+  @@map("users")
 }
 
 model RefreshToken {
   id        Int       @id @default(autoincrement())
   tokenHash String    @unique
-  adminId   Int
-  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([adminId])
+  @@index([userId])
   @@map("refresh_tokens")
 }
 

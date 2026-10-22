@@ -16,7 +16,7 @@ export interface AuthTokensResponse {
   refreshToken: string;
   tokenType: 'Bearer';
   expiresIn: string;
-  admin: {
+  user: {
     id: number;
     username: string;
   };
