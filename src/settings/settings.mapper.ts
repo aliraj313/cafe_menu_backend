@@ -1,4 +1,4 @@
-import { PaymentGatewayProvider, Prisma, Settings } from '../generated/prisma/client';
+import { Prisma, Settings } from '../generated/prisma/client';
 
 export interface SettingsResponse {
   id: number;
@@ -12,8 +12,7 @@ export interface SettingsResponse {
   instagramUrl: string | null;
   telegramUrl: string | null;
   ordersAndPaymentsEnabled: boolean;
-  paymentProvider: PaymentGatewayProvider | null;
-  paymentGatewayConfig: Record<string, unknown> | null;
+  zarinpalMerchant: string | null;
   theme: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
@@ -32,20 +31,9 @@ export function toSettingsResponse(settings: Settings): SettingsResponse {
     instagramUrl: settings.instagramUrl,
     telegramUrl: settings.telegramUrl,
     ordersAndPaymentsEnabled: settings.ordersAndPaymentsEnabled,
-    paymentProvider: settings.paymentProvider,
-    paymentGatewayConfig: toPlainConfig(settings.paymentGatewayConfig),
+    zarinpalMerchant: settings.zarinpalMerchant,
     theme: settings.theme ?? null,
     createdAt: settings.createdAt,
     updatedAt: settings.updatedAt,
   };
-}
-
-function toPlainConfig(value: Prisma.JsonValue | null): Record<string, unknown> | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return null;
 }

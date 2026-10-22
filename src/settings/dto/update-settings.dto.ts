@@ -1,9 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaymentGatewayProvider } from '../../generated/prisma/client';
 import {
   IsBoolean,
-  IsEnum,
-  IsObject,
   IsOptional,
   IsString,
   IsUrl,
@@ -56,41 +53,34 @@ export class UpdateSettingsDto {
   @MaxLength(1000)
   address?: string | null;
 
-  @ApiPropertyOptional({ example: 'https://instagram.com/mycafé' })
+  @ApiPropertyOptional({ example: 'https://instagram.com/mycafe' })
   @IsOptional()
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsUrl({ require_tld: false })
   instagramUrl?: string | null;
 
-  @ApiPropertyOptional({ example: 'https://t.me/mycafé' })
+  @ApiPropertyOptional({ example: 'https://t.me/mycafe' })
   @IsOptional()
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsUrl({ require_tld: false })
   telegramUrl?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Enable online ordering and payment. When true, paymentProvider and gateway config are required.',
+    description: 'Enable online ordering and payment. When true, zarinpalMerchant is required.',
   })
   @IsOptional()
   @IsBoolean()
   ordersAndPaymentsEnabled?: boolean;
 
   @ApiPropertyOptional({
-    enum: PaymentGatewayProvider,
-    description: 'Active payment gateway. Required when ordersAndPaymentsEnabled is true.',
+    nullable: true,
+    description: 'Zarinpal merchant id. Required when ordersAndPaymentsEnabled is true.',
+    example: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
   })
   @IsOptional()
   @ValidateIf((_, value) => value !== null && value !== undefined)
-  @IsEnum(PaymentGatewayProvider)
-  paymentProvider?: PaymentGatewayProvider | null;
-
-  @ApiPropertyOptional({
-    description:
-      'Provider-specific config object. For ZARINPAL: { "merchantId": "..." }. Designed so new gateways can use their own shape.',
-    example: { merchantId: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
-  })
-  @IsOptional()
-  @ValidateIf((_, value) => value !== null && value !== undefined)
-  @IsObject()
-  paymentGatewayConfig?: Record<string, unknown> | null;
+  @IsString()
+  @MinLength(1)
+  @MaxLength(128)
+  zarinpalMerchant?: string | null;
 }

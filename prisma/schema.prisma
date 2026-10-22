@@ -13,29 +13,22 @@ enum MealType {
   DINNER
 }
 
-/// Extensible list of payment gateways. Add new values when integrating more providers.
-enum PaymentGatewayProvider {
-  ZARINPAL
-}
-
 enum UserRole {
   ADMIN
 }
 
 model User {
-  id               Int                @id @default(autoincrement())
-  /// Iranian mobile in 09xxxxxxxxx format
-  mobile           String             @unique
-  passwordHash     String
-  role             UserRole           @default(ADMIN)
-  isActive         Boolean            @default(true)
-  refreshTokens    RefreshToken[]
+  id                Int                @id @default(autoincrement())
+  mobile            String             @unique
+  passwordHash      String
+  role              UserRole           @default(ADMIN)
+  isActive          Boolean            @default(true)
+  refreshTokens     RefreshToken[]
   passwordResetOtps PasswordResetOtp[]
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@index([role])
-  @@map("users")
 }
 
 model RefreshToken {
@@ -48,7 +41,6 @@ model RefreshToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
-  @@map("refresh_tokens")
 }
 
 model PasswordResetOtp {
@@ -62,7 +54,6 @@ model PasswordResetOtp {
   createdAt    DateTime  @default(now())
 
   @@index([userId])
-  @@map("password_reset_otps")
 }
 
 model Category {
@@ -71,15 +62,12 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
-  @@map("categories")
 }
 
 model Product {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
-  /// Price in Rial (integer). Exposed as string in API JSON.
   price       BigInt
   images      String[] @default([])
   mealType    MealType
@@ -92,32 +80,22 @@ model Product {
   @@index([categoryId])
   @@index([mealType])
   @@index([isAvailable])
-  @@map("products")
 }
 
-/// Singleton cafe/restaurant settings (one row, id fixed to SETTINGS.SINGLETON_ID).
 model Settings {
-  id                       Int                     @id @default(autoincrement())
+  id                       Int      @id @default(autoincrement())
   cafeName                 String
   slogan                   String?
   logoUrl                  String?
   description              String?
   phone                    String?
-  /// Free-text working hours, e.g. "همه‌روزه ۸ صبح تا ۱۱ شب"
   workingHours             String?
   address                  String?
   instagramUrl             String?
   telegramUrl              String?
-  ordersAndPaymentsEnabled Boolean                 @default(false)
-  /// Active gateway when orders/payments are enabled. Null when disabled.
-  paymentProvider          PaymentGatewayProvider?
-  /// Provider-specific credentials/config (shape depends on paymentProvider).
-  /// Zarinpal example: { "merchantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" }
-  paymentGatewayConfig     Json?
-  /// Arbitrary UI theme configuration (shape owned by the frontend).
+  ordersAndPaymentsEnabled Boolean  @default(false)
+  zarinpalMerchant         String?
   theme                    Json?
-  createdAt                DateTime                @default(now())
-  updatedAt                DateTime                @updatedAt
-
-  @@map("settings")
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 }

@@ -3,7 +3,6 @@ import { Prisma, Settings } from '../generated/prisma/client';
 import { BusinessRuleException } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
-import { validatePaymentGatewayConfig } from './payment-gateway-config.validator';
 import { SettingsResponse, toSettingsResponse } from './settings.mapper';
 import { SettingsRepository } from './settings.repository';
 
@@ -25,13 +24,17 @@ export class SettingsService {
     const ordersAndPaymentsEnabled =
       dto.ordersAndPaymentsEnabled ?? current.ordersAndPaymentsEnabled;
 
-    const paymentProvider =
-      dto.paymentProvider !== undefined ? dto.paymentProvider : current.paymentProvider;
+    const zarinpalMerchant =
+      dto.zarinpalMerchant !== undefined ? dto.zarinpalMerchant : current.zarinpalMerchant;
 
-    const rawConfig =
-      dto.paymentGatewayConfig !== undefined
-        ? dto.paymentGatewayConfig
-        : jsonToRecord(current.paymentGatewayConfig);
+    if (ordersAndPaymentsEnabled) {
+      if (zarinpalMerchant === null || zarinpalMerchant === undefined || zarinpalMerchant.trim() === '') {
+        throw new BusinessRuleException(
+          'ZARINPAL_MERCHANT_REQUIRED',
+          'zarinpalMerchant is required when orders and payments are enabled.',
+        );
+      }
+    }
 
     const data: Prisma.SettingsUpdateInput = {
       ...(dto.cafeName !== undefined ? { cafeName: dto.cafeName } : {}),
@@ -46,48 +49,8 @@ export class SettingsService {
       ...(dto.ordersAndPaymentsEnabled !== undefined
         ? { ordersAndPaymentsEnabled: dto.ordersAndPaymentsEnabled }
         : {}),
+      ...(dto.zarinpalMerchant !== undefined ? { zarinpalMerchant: dto.zarinpalMerchant } : {}),
     };
-
-    if (ordersAndPaymentsEnabled) {
-      if (paymentProvider === null || paymentProvider === undefined) {
-        throw new BusinessRuleException(
-          'PAYMENT_PROVIDER_REQUIRED',
-          'paymentProvider is required when orders and payments are enabled.',
-        );
-      }
-
-      const normalizedConfig = validatePaymentGatewayConfig(
-        paymentProvider,
-        rawConfig,
-        this.configs,
-      );
-
-      data.paymentProvider = paymentProvider;
-      data.paymentGatewayConfig = normalizedConfig as Prisma.InputJsonValue;
-    } else {
-      // When disabled, allow clearing gateway fields; keep existing if not sent.
-      if (dto.paymentProvider !== undefined) {
-        data.paymentProvider = dto.paymentProvider;
-      } else if (dto.ordersAndPaymentsEnabled === false) {
-        data.paymentProvider = null;
-      }
-
-      if (dto.paymentGatewayConfig !== undefined) {
-        if (dto.paymentGatewayConfig === null) {
-          data.paymentGatewayConfig = Prisma.JsonNull;
-        } else if (paymentProvider) {
-          data.paymentGatewayConfig = validatePaymentGatewayConfig(
-            paymentProvider,
-            dto.paymentGatewayConfig,
-            this.configs,
-          ) as Prisma.InputJsonValue;
-        } else {
-          data.paymentGatewayConfig = dto.paymentGatewayConfig as Prisma.InputJsonValue;
-        }
-      } else if (dto.ordersAndPaymentsEnabled === false) {
-        data.paymentGatewayConfig = Prisma.JsonNull;
-      }
-    }
 
     const updated = await this.settingsRepository.update(
       this.configs.SETTINGS.SINGLETON_ID,
@@ -110,7 +73,7 @@ export class SettingsService {
     return toSettingsResponse(updated);
   }
 
-    private async ensureSingleton(): Promise<Settings> {
+  private async ensureSingleton(): Promise<Settings> {
     const existing = await this.settingsRepository.findById(this.configs.SETTINGS.SINGLETON_ID);
     if (existing) {
       return existing;
@@ -121,14 +84,4 @@ export class SettingsService {
       ordersAndPaymentsEnabled: false,
     });
   }
-}
-
-function jsonToRecord(value: Prisma.JsonValue | null): Record<string, unknown> | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return null;
 }
