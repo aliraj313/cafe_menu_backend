@@ -23,6 +23,15 @@ export class ConfigsService {
       readonly SECRET: string;
       readonly TTL: string;
     };
+    readonly REFRESH: {
+      readonly SECRET: string;
+      readonly TTL: string;
+    };
+  };
+
+  readonly ADMIN_SEED: {
+    readonly USERNAME: string;
+    readonly PASSWORD: string;
   };
 
   readonly OTP: {
@@ -92,6 +101,11 @@ export class ConfigsService {
       MIN_RESEND_COOLDOWN_SECONDS: 10,
       MIN_MAX_ATTEMPTS: 1,
     },
+    AUTH: {
+      BCRYPT_SALT_ROUNDS: 12,
+      MIN_PASSWORD_LENGTH: 8,
+      MIN_USERNAME_LENGTH: 3,
+    },
   };
 
   constructor(private readonly configService: ConfigService) {
@@ -109,7 +123,21 @@ export class ConfigsService {
         SECRET: this.requireNonEmptyString('JWT_ACCESS_SECRET'),
         TTL: this.requireNonEmptyString('JWT_ACCESS_TTL'),
       },
+      REFRESH: {
+        SECRET: this.requireNonEmptyString('JWT_REFRESH_SECRET'),
+        TTL: this.requireNonEmptyString('JWT_REFRESH_TTL'),
+      },
     };
+
+    this.ADMIN_SEED = {
+      USERNAME: this.requireNonEmptyString('ADMIN_USERNAME'),
+      PASSWORD: this.requireNonEmptyString('ADMIN_PASSWORD'),
+    };
+    if (this.ADMIN_SEED.PASSWORD.length < this.LIMITS.AUTH.MIN_PASSWORD_LENGTH) {
+      throw new Error(
+        `ADMIN_PASSWORD must be at least ${this.LIMITS.AUTH.MIN_PASSWORD_LENGTH} characters`,
+      );
+    }
 
     this.OTP = {
       TTL_SECONDS: this.parseIntInRange(

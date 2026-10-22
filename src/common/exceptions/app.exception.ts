@@ -33,3 +33,15 @@ export class BusinessRuleException extends AppException {
     super(code, message, HttpStatus.UNPROCESSABLE_ENTITY, details);
   }
 }
+
+export class UnauthorizedException extends AppException {
+  constructor(code: string, message: string, details: unknown[] = []) {
+    super(code, message, HttpStatus.UNAUTHORIZED, details);
+  }
+}
+
+export class ForbiddenException extends AppException {
+  constructor(code: string, message: string, details: unknown[] = []) {
+    super(code, message, HttpStatus.FORBIDDEN, details);
+  }
+}

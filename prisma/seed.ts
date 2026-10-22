@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { MealType, PrismaClient } from '../src/generated/prisma/client';
 
@@ -9,8 +10,26 @@ const prisma = new PrismaClient({ adapter });
 
 /** Must match ConfigsService.SETTINGS.SINGLETON_ID */
 const SETTINGS_SINGLETON_ID = 1;
+const BCRYPT_SALT_ROUNDS = 12;
 
 async function main(): Promise<void> {
+  const adminUsername = process.env.ADMIN_USERNAME ?? 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD ?? 'changeme123';
+
+  const passwordHash = await bcrypt.hash(adminPassword, BCRYPT_SALT_ROUNDS);
+  await prisma.admin.upsert({
+    where: { username: adminUsername },
+    update: {
+      passwordHash,
+      isActive: true,
+    },
+    create: {
+      username: adminUsername,
+      passwordHash,
+      isActive: true,
+    },
+  });
+
   await prisma.settings.upsert({
     where: { id: SETTINGS_SINGLETON_ID },
     update: {},
