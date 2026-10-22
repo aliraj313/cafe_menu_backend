@@ -96,7 +96,21 @@ export class SettingsService {
     return toSettingsResponse(updated);
   }
 
-  private async ensureSingleton(): Promise<Settings> {
+  async updateTheme(theme: unknown): Promise<SettingsResponse> {
+    await this.ensureSingleton();
+
+    const themeValue =
+      theme === null || theme === undefined
+        ? Prisma.JsonNull
+        : (theme as Prisma.InputJsonValue);
+
+    const updated = await this.settingsRepository.update(this.configs.SETTINGS.SINGLETON_ID, {
+      theme: themeValue,
+    });
+    return toSettingsResponse(updated);
+  }
+
+    private async ensureSingleton(): Promise<Settings> {
     const existing = await this.settingsRepository.findById(this.configs.SETTINGS.SINGLETON_ID);
     if (existing) {
       return existing;

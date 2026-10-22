@@ -98,6 +98,8 @@ model Settings {
   /// Provider-specific credentials/config (shape depends on paymentProvider).
   /// Zarinpal example: { "merchantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" }
   paymentGatewayConfig     Json?
+  /// Arbitrary UI theme configuration (shape owned by the frontend).
+  theme                    Json?
   createdAt                DateTime                @default(now())
   updatedAt                DateTime                @updatedAt
 

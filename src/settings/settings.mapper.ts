@@ -14,6 +14,7 @@ export interface SettingsResponse {
   ordersAndPaymentsEnabled: boolean;
   paymentProvider: PaymentGatewayProvider | null;
   paymentGatewayConfig: Record<string, unknown> | null;
+  theme: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +34,7 @@ export function toSettingsResponse(settings: Settings): SettingsResponse {
     ordersAndPaymentsEnabled: settings.ordersAndPaymentsEnabled,
     paymentProvider: settings.paymentProvider,
     paymentGatewayConfig: toPlainConfig(settings.paymentGatewayConfig),
+    theme: settings.theme ?? null,
     createdAt: settings.createdAt,
     updatedAt: settings.updatedAt,
   };
