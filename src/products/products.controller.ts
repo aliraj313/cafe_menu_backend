@@ -11,6 +11,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { UserRole } from '../generated/prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/types/paginated-result';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -20,6 +22,7 @@ import { ProductResponse } from './product.mapper';
 import { ProductsService } from './products.service';
 
 @ApiTags('products')
+@Roles(UserRole.ADMIN)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

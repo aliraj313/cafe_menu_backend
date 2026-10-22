@@ -11,6 +11,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { UserRole } from '../generated/prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Category } from '../generated/prisma/client';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
@@ -20,6 +22,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @ApiTags('categories')
+@Roles(UserRole.ADMIN)
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}

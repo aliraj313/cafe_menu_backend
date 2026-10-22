@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { MealType, PrismaClient } from '../src/generated/prisma/client';
+import { MealType, PrismaClient, UserRole } from '../src/generated/prisma/client';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -21,11 +21,13 @@ async function main(): Promise<void> {
     where: { username: adminUsername },
     update: {
       passwordHash,
+      role: UserRole.ADMIN,
       isActive: true,
     },
     create: {
       username: adminUsername,
       passwordHash,
+      role: UserRole.ADMIN,
       isActive: true,
     },
   });

@@ -28,7 +28,7 @@ export class AuthService {
       throw new UnauthorizedException('INVALID_CREDENTIALS', 'Invalid username or password.');
     }
 
-    return this.tokenService.issueTokens({ id: user.id, username: user.username });
+    return this.tokenService.issueTokens({ id: user.id, username: user.username, role: user.role });
   }
 
   async refresh(refreshToken: string): Promise<AuthTokensResponse> {
@@ -55,7 +55,7 @@ export class AuthService {
     }
 
     await this.refreshTokensRepository.revoke(stored.id, new Date());
-    return this.tokenService.issueTokens({ id: user.id, username: user.username });
+    return this.tokenService.issueTokens({ id: user.id, username: user.username, role: user.role });
   }
 
   async logout(refreshToken: string): Promise<void> {

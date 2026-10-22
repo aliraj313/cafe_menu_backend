@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomUUID } from 'crypto';
+import { UserRole } from '../generated/prisma/client';
 import { ConfigsService } from '../config/configs.service';
 import { AccessTokenPayload, AuthTokensResponse, RefreshTokenPayload } from './auth.types';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
@@ -13,10 +14,15 @@ export class TokenService {
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
-  async issueTokens(user: { id: number; username: string }): Promise<AuthTokensResponse> {
+  async issueTokens(user: {
+    id: number;
+    username: string;
+    role: UserRole;
+  }): Promise<AuthTokensResponse> {
     const accessPayload: AccessTokenPayload = {
       sub: user.id,
       username: user.username,
+      role: user.role,
       type: 'access',
     };
 
@@ -24,6 +30,7 @@ export class TokenService {
     const refreshPayload: RefreshTokenPayload = {
       sub: user.id,
       username: user.username,
+      role: user.role,
       type: 'refresh',
       jti,
     };
@@ -53,6 +60,7 @@ export class TokenService {
       user: {
         id: user.id,
         username: user.username,
+        role: user.role,
       },
     };
   }
