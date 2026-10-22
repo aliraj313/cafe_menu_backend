@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaymentGatewayProvider } from '@prisma/client';
+import { PaymentGatewayProvider } from '../../generated/prisma/client';
 import {
   IsBoolean,
   IsEnum,

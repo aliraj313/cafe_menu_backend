@@ -1,4 +1,4 @@
-import { PaymentGatewayProvider, Prisma, Settings } from '@prisma/client';
+import { PaymentGatewayProvider, Prisma, Settings } from '../generated/prisma/client';
 
 export interface SettingsResponse {
   id: number;

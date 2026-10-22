@@ -1,4 +1,4 @@
-import { PaymentGatewayProvider } from '@prisma/client';
+import { PaymentGatewayProvider } from '../generated/prisma/client';
 import { BusinessRuleException } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
 

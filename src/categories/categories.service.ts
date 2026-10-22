@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Category } from '@prisma/client';
+import { Category } from '../generated/prisma/client';
 import { ConfigsService } from '../config/configs.service';
 import { ConflictException, NotFoundException } from '../common/exceptions/app.exception';
 import { PaginatedResult } from '../common/types/paginated-result';

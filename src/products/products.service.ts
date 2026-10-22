@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import { CategoriesRepository } from '../categories/categories.repository';
 import { ConfigsService } from '../config/configs.service';
 import { NotFoundException } from '../common/exceptions/app.exception';

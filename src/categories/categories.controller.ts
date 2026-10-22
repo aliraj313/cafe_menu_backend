@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Category } from '@prisma/client';
+import { Category } from '../generated/prisma/client';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PaginatedResult } from '../common/types/paginated-result';
 import { CategoriesService } from './categories.service';

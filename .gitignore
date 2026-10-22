@@ -38,3 +38,6 @@ prisma/*.db-journal
 *.tgz
 .temp/
 .tmp/
+
+# Prisma generated client
+src/generated/

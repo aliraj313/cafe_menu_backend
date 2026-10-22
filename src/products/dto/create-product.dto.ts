@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MealType } from '@prisma/client';
+import { MealType } from '../../generated/prisma/client';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,

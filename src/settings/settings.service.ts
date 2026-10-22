@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Settings } from '@prisma/client';
+import { Prisma, Settings } from '../generated/prisma/client';
 import { BusinessRuleException } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
