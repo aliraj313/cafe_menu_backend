@@ -5,7 +5,7 @@ import { SmsModule } from '../sms/sms.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { PasswordResetOtpsRepository } from './password-reset-otps.repository';
+import { OtpsRepository } from './otps.repository';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { TokenService } from './token.service';
@@ -23,7 +23,7 @@ import { UsersRepository } from './users.repository';
     TokenService,
     UsersRepository,
     RefreshTokensRepository,
-    PasswordResetOtpsRepository,
+    OtpsRepository,
     JwtAccessStrategy,
     JwtAuthGuard,
   ],

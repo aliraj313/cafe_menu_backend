@@ -8,7 +8,7 @@ import { AuthTokensResponse, ForgotPasswordResponse } from './auth.types';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { PasswordResetOtpsRepository } from './password-reset-otps.repository';
+import { OtpsRepository } from './otps.repository';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 import { TokenService } from './token.service';
 import { UsersRepository } from './users.repository';
@@ -18,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly refreshTokensRepository: RefreshTokensRepository,
-    private readonly passwordResetOtpsRepository: PasswordResetOtpsRepository,
+    private readonly otpsRepository: OtpsRepository,
     private readonly tokenService: TokenService,
     private readonly configs: ConfigsService,
     @Inject(SMS_SERVICE) private readonly smsService: SmsService,
@@ -94,7 +94,7 @@ export class AuthService {
     }
 
     const now = new Date();
-    const latest = await this.passwordResetOtpsRepository.findLatestForUser(user.id);
+    const latest = await this.otpsRepository.findLatestForUser(user.id);
     if (latest) {
       const elapsedMs = now.getTime() - latest.createdAt.getTime();
       const cooldownMs = this.configs.OTP.RESEND_COOLDOWN_SECONDS * 1000;
@@ -112,7 +112,7 @@ export class AuthService {
     const codeHash = this.hashOtp(otp);
     const expiresAt = new Date(now.getTime() + this.configs.OTP.TTL_SECONDS * 1000);
 
-    await this.passwordResetOtpsRepository.create({
+    await this.otpsRepository.create({
       userId: user.id,
       codeHash,
       expiresAt,
@@ -133,7 +133,7 @@ export class AuthService {
     }
 
     const now = new Date();
-    const otpRecord = await this.passwordResetOtpsRepository.findLatestActiveForUser(user.id, now);
+    const otpRecord = await this.otpsRepository.findLatestActiveForUser(user.id, now);
     if (!otpRecord) {
       throw new UnauthorizedException('INVALID_OTP', 'Invalid or expired OTP.');
     }
@@ -147,7 +147,7 @@ export class AuthService {
 
     const matches = this.hashOtp(dto.otp) === otpRecord.codeHash;
     if (!matches) {
-      await this.passwordResetOtpsRepository.incrementAttempts(otpRecord.id);
+      await this.otpsRepository.incrementAttempts(otpRecord.id);
       throw new UnauthorizedException('INVALID_OTP', 'Invalid or expired OTP.');
     }
 
@@ -157,8 +157,8 @@ export class AuthService {
     );
 
     await this.usersRepository.updatePassword(user.id, passwordHash);
-    await this.passwordResetOtpsRepository.consume(otpRecord.id, now);
-    await this.passwordResetOtpsRepository.consumeAllActiveForUser(user.id, now);
+    await this.otpsRepository.consume(otpRecord.id, now);
+    await this.otpsRepository.consumeAllActiveForUser(user.id, now);
     await this.refreshTokensRepository.revokeAllForUser(user.id, now);
 
     return { message: 'Password has been reset successfully.' };
