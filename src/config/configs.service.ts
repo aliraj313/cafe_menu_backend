@@ -6,7 +6,21 @@ export type PaymentProvider = 'mock' | 'zarinpal';
 
 @Injectable()
 export class ConfigsService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {
+    this.assertProductionSafety();
+  }
+
+  private assertProductionSafety(): void {
+    if (!isProduction()) {
+      return;
+    }
+    if (this.getEnvBoolean('AUTH_DEMO_OTP_ENABLED')) {
+      throw new Error('AUTH_DEMO_OTP_ENABLED must be false in production');
+    }
+    if (this.getEnvBoolean('PAYMENT_MOCK_ENABLED')) {
+      throw new Error('PAYMENT_MOCK_ENABLED must be false in production');
+    }
+  }
 
   NODE_ENV: NodeEnv = this.getEnv('NODE_ENV') as NodeEnv;
   PORT = this.getEnvNumber('PORT');
