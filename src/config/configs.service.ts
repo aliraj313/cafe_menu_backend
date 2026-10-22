@@ -56,6 +56,23 @@ export class ConfigsService {
     SCALAR_DARK_MODE: true,
   };
 
+  /** Singleton settings row and default profile values. */
+  readonly SETTINGS = {
+    SINGLETON_ID: 'default',
+    DEFAULT_CAFE_NAME: 'کافه من',
+  };
+
+  /**
+   * Supported payment gateway providers for admin settings.
+   * Add a new entry here (and Prisma enum) when integrating another gateway.
+   */
+  readonly PAYMENT_GATEWAYS = {
+    PROVIDERS: ['ZARINPAL'] as const,
+    ZARINPAL: {
+      CONFIG_KEYS: ['merchantId'] as const,
+    },
+  };
+
   /** Shared business / API limits used across modules. */
   readonly LIMITS = {
     PAGINATION: {

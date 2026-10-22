@@ -2,7 +2,21 @@ import { MealType, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+const SETTINGS_ID = 'default';
+
 async function main(): Promise<void> {
+  await prisma.settings.upsert({
+    where: { id: SETTINGS_ID },
+    update: {},
+    create: {
+      id: SETTINGS_ID,
+      cafeName: 'کافه من',
+      slogan: 'طعم واقعی قهوه',
+      workingHours: 'همه‌روزه ۸ صبح تا ۱۱ شب',
+      ordersAndPaymentsEnabled: false,
+    },
+  });
+
   const drinks = await prisma.category.upsert({
     where: { name: 'نوشیدنی' },
     update: {},

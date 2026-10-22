@@ -13,6 +13,11 @@ enum MealType {
   DINNER
 }
 
+/// Extensible list of payment gateways. Add new values when integrating more providers.
+enum PaymentGatewayProvider {
+  ZARINPAL
+}
+
 model Category {
   id        String    @id @default(cuid())
   name      String    @unique
@@ -41,4 +46,29 @@ model Product {
   @@index([mealType])
   @@index([isAvailable])
   @@map("products")
+}
+
+/// Singleton cafe/restaurant settings (one row, id fixed by application).
+model Settings {
+  id                         String                  @id
+  cafeName                   String
+  slogan                     String?
+  logoUrl                    String?
+  description                String?
+  phone                      String?
+  /// Free-text working hours, e.g. "همه‌روزه ۸ صبح تا ۱۱ شب"
+  workingHours               String?
+  address                    String?
+  instagramUrl               String?
+  telegramUrl                String?
+  ordersAndPaymentsEnabled   Boolean                 @default(false)
+  /// Active gateway when orders/payments are enabled. Null when disabled.
+  paymentProvider            PaymentGatewayProvider?
+  /// Provider-specific credentials/config (shape depends on paymentProvider).
+  /// Zarinpal example: { "merchantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" }
+  paymentGatewayConfig       Json?
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+
+  @@map("settings")
 }
