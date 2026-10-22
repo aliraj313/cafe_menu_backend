@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Placeholder models — full domain models will be added in subsequent commits.
+// See cafe-menu-backend-spec.md for the complete data model.
+
+model Cafe {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isOpen    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cafes")
+}
