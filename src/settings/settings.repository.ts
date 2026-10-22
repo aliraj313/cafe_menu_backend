@@ -10,7 +10,7 @@ export class SettingsRepository {
     return this.prisma.settings.findUnique({ where: { id } });
   }
 
-  create(data: Prisma.SettingsCreateInput): Promise<Settings> {
+  create(data: Prisma.SettingsUncheckedCreateInput): Promise<Settings> {
     return this.prisma.settings.create({ data });
   }
 
