@@ -13,19 +13,19 @@ const SETTINGS_SINGLETON_ID = 1;
 const BCRYPT_SALT_ROUNDS = 12;
 
 async function main(): Promise<void> {
-  const adminUsername = process.env.ADMIN_USERNAME ?? 'admin';
+  const adminMobile = process.env.ADMIN_MOBILE ?? '09123456789';
   const adminPassword = process.env.ADMIN_PASSWORD ?? 'changeme123';
 
   const passwordHash = await bcrypt.hash(adminPassword, BCRYPT_SALT_ROUNDS);
   await prisma.user.upsert({
-    where: { username: adminUsername },
+    where: { mobile: adminMobile },
     update: {
       passwordHash,
       role: UserRole.ADMIN,
       isActive: true,
     },
     create: {
-      username: adminUsername,
+      mobile: adminMobile,
       passwordHash,
       role: UserRole.ADMIN,
       isActive: true,

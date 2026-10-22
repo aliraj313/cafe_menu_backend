@@ -10,11 +10,18 @@ export class UsersRepository {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  findByUsername(username: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { username } });
+  findByMobile(mobile: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { mobile } });
   }
 
   create(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({ data });
+  }
+
+  updatePassword(id: number, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data: { passwordHash },
+    });
   }
 }

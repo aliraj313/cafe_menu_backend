@@ -16,12 +16,12 @@ export class TokenService {
 
   async issueTokens(user: {
     id: number;
-    username: string;
+    mobile: string;
     role: UserRole;
   }): Promise<AuthTokensResponse> {
     const accessPayload: AccessTokenPayload = {
       sub: user.id,
-      username: user.username,
+      mobile: user.mobile,
       role: user.role,
       type: 'access',
     };
@@ -29,7 +29,7 @@ export class TokenService {
     const jti = randomUUID();
     const refreshPayload: RefreshTokenPayload = {
       sub: user.id,
-      username: user.username,
+      mobile: user.mobile,
       role: user.role,
       type: 'refresh',
       jti,
@@ -59,7 +59,7 @@ export class TokenService {
       expiresIn: this.configs.JWT.ACCESS.TTL,
       user: {
         id: user.id,
-        username: user.username,
+        mobile: user.mobile,
         role: user.role,
       },
     };

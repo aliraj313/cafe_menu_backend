@@ -2,14 +2,14 @@ import { UserRole } from '../generated/prisma/client';
 
 export interface AccessTokenPayload {
   sub: number;
-  username: string;
+  mobile: string;
   role: UserRole;
   type: 'access';
 }
 
 export interface RefreshTokenPayload {
   sub: number;
-  username: string;
+  mobile: string;
   role: UserRole;
   type: 'refresh';
   jti: string;
@@ -22,7 +22,12 @@ export interface AuthTokensResponse {
   expiresIn: string;
   user: {
     id: number;
-    username: string;
+    mobile: string;
     role: UserRole;
   };
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  resendAvailableInSeconds: number;
 }

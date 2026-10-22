@@ -3,7 +3,7 @@ import { UserRole } from '../../generated/prisma/client';
 
 export interface AuthenticatedUser {
   id: number;
-  username: string;
+  mobile: string;
   role: UserRole;
 }
 

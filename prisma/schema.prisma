@@ -23,14 +23,16 @@ enum UserRole {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  username      String         @unique
-  passwordHash  String
-  role          UserRole       @default(ADMIN)
-  isActive      Boolean        @default(true)
-  refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id               Int                @id @default(autoincrement())
+  /// Iranian mobile in 09xxxxxxxxx format
+  mobile           String             @unique
+  passwordHash     String
+  role             UserRole           @default(ADMIN)
+  isActive         Boolean            @default(true)
+  refreshTokens    RefreshToken[]
+  passwordResetOtps PasswordResetOtp[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   @@index([role])
   @@map("users")
@@ -47,6 +49,20 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model PasswordResetOtp {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash     String
+  expiresAt    DateTime
+  attemptCount Int       @default(0)
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_reset_otps")
 }
 
 model Category {

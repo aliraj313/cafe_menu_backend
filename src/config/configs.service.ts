@@ -30,7 +30,7 @@ export class ConfigsService {
   };
 
   readonly ADMIN_SEED: {
-    readonly USERNAME: string;
+    readonly MOBILE: string;
     readonly PASSWORD: string;
   };
 
@@ -104,7 +104,7 @@ export class ConfigsService {
     AUTH: {
       BCRYPT_SALT_ROUNDS: 12,
       MIN_PASSWORD_LENGTH: 8,
-      MIN_USERNAME_LENGTH: 3,
+      OTP_LENGTH: 6,
     },
   };
 
@@ -130,7 +130,7 @@ export class ConfigsService {
     };
 
     this.ADMIN_SEED = {
-      USERNAME: this.requireNonEmptyString('ADMIN_USERNAME'),
+      MOBILE: this.parseMobile(this.requireNonEmptyString('ADMIN_MOBILE')),
       PASSWORD: this.requireNonEmptyString('ADMIN_PASSWORD'),
     };
     if (this.ADMIN_SEED.PASSWORD.length < this.LIMITS.AUTH.MIN_PASSWORD_LENGTH) {
@@ -287,6 +287,14 @@ export class ConfigsService {
       );
     }
     return raw as PaymentProvider;
+  }
+
+  private parseMobile(raw: string): string {
+    const normalized = raw.trim();
+    if (!/^09\d{9}$/.test(normalized)) {
+      throw new Error('ADMIN_MOBILE must be a valid Iranian mobile number (09xxxxxxxxx)');
+    }
+    return normalized;
   }
 
   private optionalUrl(key: string): string | undefined {
