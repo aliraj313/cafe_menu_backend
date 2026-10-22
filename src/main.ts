@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
 import { AppExceptionFilter } from './common/filters/app-exception.filter';
 
@@ -14,7 +15,9 @@ async function bootstrap(): Promise<void> {
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
   const frontendOrigin = configService.get<string>('FRONTEND_ORIGIN', 'http://localhost:5173');
 
-  app.setGlobalPrefix(apiPrefix);
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: ['docs', 'docs/(.*)', 'openapi.json'],
+  });
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
   app.useGlobalPipes(
@@ -34,19 +37,37 @@ async function bootstrap(): Promise<void> {
   });
 
   if (nodeEnv !== 'production') {
-    const swaggerConfig = new DocumentBuilder()
+    const openApiConfig = new DocumentBuilder()
       .setTitle('Cafe Menu Backend')
       .setDescription('API for Persian cafe and restaurant menu application')
       .setVersion('1.0')
       .addBearerAuth()
       .build();
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('docs', app, document);
+
+    const document = SwaggerModule.createDocument(app, openApiConfig);
+
+    // Expose raw OpenAPI JSON for Scalar / external tools
+    app.getHttpAdapter().get('/openapi.json', (_req: unknown, res: { json: (body: unknown) => void }) => {
+      res.json(document);
+    });
+
+    app.use(
+      '/docs',
+      apiReference({
+        content: document,
+        theme: 'default',
+        darkMode: true,
+      }),
+    );
   }
 
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(`Server running on http://localhost:${port}/${apiPrefix}`);
+  if (nodeEnv !== 'production') {
+    // eslint-disable-next-line no-console
+    console.log(`API docs (Scalar): http://localhost:${port}/docs`);
+  }
 }
 
 bootstrap().catch((err: unknown) => {

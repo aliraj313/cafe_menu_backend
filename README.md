@@ -2,7 +2,7 @@
 
 Backend API for the Persian cafe and restaurant menu application.
 
-**Stack:** NestJS · TypeScript (strict) · Prisma · PostgreSQL
+**Stack:** NestJS · TypeScript (strict) · Prisma · PostgreSQL · Scalar
 
 ## Prerequisites
 
@@ -23,7 +23,8 @@ npm run start:dev
 ```
 
 - API base: `http://localhost:3000/api/v1`
-- Swagger (dev): `http://localhost:3000/docs`
+- API docs (Scalar): `http://localhost:3000/docs`
+- OpenAPI JSON: `http://localhost:3000/openapi.json`
 - Health: `GET /api/v1/health`
 
 ## Scripts
