@@ -93,7 +93,6 @@ model Settings {
   address                  String?
   instagramUrl             String?
   telegramUrl              String?
-  ordersAndPaymentsEnabled Boolean  @default(false)
   zarinpalMerchant         String?
   theme                    Json?
   createdAt                DateTime @default(now())

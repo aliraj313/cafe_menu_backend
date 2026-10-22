@@ -11,7 +11,6 @@ export interface SettingsResponse {
   address: string | null;
   instagramUrl: string | null;
   telegramUrl: string | null;
-  ordersAndPaymentsEnabled: boolean;
   zarinpalMerchant: string | null;
   theme: Prisma.JsonValue | null;
   createdAt: Date;
@@ -30,7 +29,6 @@ export function toSettingsResponse(settings: Settings): SettingsResponse {
     address: settings.address,
     instagramUrl: settings.instagramUrl,
     telegramUrl: settings.telegramUrl,
-    ordersAndPaymentsEnabled: settings.ordersAndPaymentsEnabled,
     zarinpalMerchant: settings.zarinpalMerchant,
     theme: settings.theme ?? null,
     createdAt: settings.createdAt,

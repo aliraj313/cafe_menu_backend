@@ -1,6 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsOptional,
   IsString,
   IsUrl,
@@ -66,15 +65,8 @@ export class UpdateSettingsDto {
   telegramUrl?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Enable online ordering and payment. When true, zarinpalMerchant is required.',
-  })
-  @IsOptional()
-  @IsBoolean()
-  ordersAndPaymentsEnabled?: boolean;
-
-  @ApiPropertyOptional({
     nullable: true,
-    description: 'Zarinpal merchant id. Required when ordersAndPaymentsEnabled is true.',
+    description: 'Zarinpal merchant id',
     example: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
   })
   @IsOptional()

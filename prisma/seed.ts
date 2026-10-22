@@ -40,7 +40,6 @@ async function main(): Promise<void> {
       cafeName: 'کافه من',
       slogan: 'طعم واقعی قهوه',
       workingHours: 'همه‌روزه ۸ صبح تا ۱۱ شب',
-      ordersAndPaymentsEnabled: false,
     },
   });
 

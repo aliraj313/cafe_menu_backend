@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Settings } from '../generated/prisma/client';
-import { BusinessRuleException } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { SettingsResponse, toSettingsResponse } from './settings.mapper';
@@ -19,22 +18,7 @@ export class SettingsService {
   }
 
   async update(dto: UpdateSettingsDto): Promise<SettingsResponse> {
-    const current = await this.ensureSingleton();
-
-    const ordersAndPaymentsEnabled =
-      dto.ordersAndPaymentsEnabled ?? current.ordersAndPaymentsEnabled;
-
-    const zarinpalMerchant =
-      dto.zarinpalMerchant !== undefined ? dto.zarinpalMerchant : current.zarinpalMerchant;
-
-    if (ordersAndPaymentsEnabled) {
-      if (zarinpalMerchant === null || zarinpalMerchant === undefined || zarinpalMerchant.trim() === '') {
-        throw new BusinessRuleException(
-          'ZARINPAL_MERCHANT_REQUIRED',
-          'zarinpalMerchant is required when orders and payments are enabled.',
-        );
-      }
-    }
+    await this.ensureSingleton();
 
     const data: Prisma.SettingsUpdateInput = {
       ...(dto.cafeName !== undefined ? { cafeName: dto.cafeName } : {}),
@@ -46,9 +30,6 @@ export class SettingsService {
       ...(dto.address !== undefined ? { address: dto.address } : {}),
       ...(dto.instagramUrl !== undefined ? { instagramUrl: dto.instagramUrl } : {}),
       ...(dto.telegramUrl !== undefined ? { telegramUrl: dto.telegramUrl } : {}),
-      ...(dto.ordersAndPaymentsEnabled !== undefined
-        ? { ordersAndPaymentsEnabled: dto.ordersAndPaymentsEnabled }
-        : {}),
       ...(dto.zarinpalMerchant !== undefined ? { zarinpalMerchant: dto.zarinpalMerchant } : {}),
     };
 
@@ -81,7 +62,6 @@ export class SettingsService {
     return this.settingsRepository.create({
       id: this.configs.SETTINGS.SINGLETON_ID,
       cafeName: this.configs.SETTINGS.DEFAULT_CAFE_NAME,
-      ordersAndPaymentsEnabled: false,
     });
   }
 }
