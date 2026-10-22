@@ -7,14 +7,29 @@ import { SettingsRepository } from './settings.repository';
 
 @Injectable()
 export class SettingsService {
+  private static readonly CACHE_TTL_MS = 1 * 60 * 1000; // 24 hours
+
+  private cached: SettingsResponse | null = null;
+  private cachedExpiresAt = 0;
+
   constructor(
     private readonly settingsRepository: SettingsRepository,
     private readonly configs: ConfigsService,
-  ) {}
+  ) { }
 
   async get(): Promise<SettingsResponse> {
+    console.log(1);
+
+    if (this.cached && Date.now() < this.cachedExpiresAt) {
+      return this.cached;
+    }
+    console.log(2);
+
+
     const settings = await this.ensureSingleton();
-    return toSettingsResponse(settings);
+    const response = toSettingsResponse(settings);
+    this.setCache(response);
+    return response;
   }
 
   async update(dto: UpdateSettingsDto): Promise<SettingsResponse> {
@@ -37,7 +52,9 @@ export class SettingsService {
       this.configs.SETTINGS.SINGLETON_ID,
       data,
     );
-    return toSettingsResponse(updated);
+    const response = toSettingsResponse(updated);
+    this.setCache(response); // refresh cache with the new data
+    return response;
   }
 
   async updateTheme(theme: unknown): Promise<SettingsResponse> {
@@ -48,14 +65,24 @@ export class SettingsService {
         ? Prisma.JsonNull
         : (theme as Prisma.InputJsonValue);
 
-    const updated = await this.settingsRepository.update(this.configs.SETTINGS.SINGLETON_ID, {
-      theme: themeValue,
-    });
-    return toSettingsResponse(updated);
+    const updated = await this.settingsRepository.update(
+      this.configs.SETTINGS.SINGLETON_ID,
+      { theme: themeValue },
+    );
+    const response = toSettingsResponse(updated);
+    this.setCache(response);
+    return response;
+  }
+
+  private setCache(value: SettingsResponse): void {
+    this.cached = value;
+    this.cachedExpiresAt = Date.now() + SettingsService.CACHE_TTL_MS;
   }
 
   private async ensureSingleton(): Promise<Settings> {
-    const existing = await this.settingsRepository.findById(this.configs.SETTINGS.SINGLETON_ID);
+    const existing = await this.settingsRepository.findById(
+      this.configs.SETTINGS.SINGLETON_ID,
+    );
     if (existing) {
       return existing;
     }
