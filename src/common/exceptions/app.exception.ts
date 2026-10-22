@@ -15,3 +15,21 @@ export class AppException extends HttpException {
     this.details = details;
   }
 }
+
+export class NotFoundException extends AppException {
+  constructor(code: string, message: string, details: unknown[] = []) {
+    super(code, message, HttpStatus.NOT_FOUND, details);
+  }
+}
+
+export class ConflictException extends AppException {
+  constructor(code: string, message: string, details: unknown[] = []) {
+    super(code, message, HttpStatus.CONFLICT, details);
+  }
+}
+
+export class BusinessRuleException extends AppException {
+  constructor(code: string, message: string, details: unknown[] = []) {
+    super(code, message, HttpStatus.UNPROCESSABLE_ENTITY, details);
+  }
+}
