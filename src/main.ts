@@ -4,17 +4,19 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
 import { AppExceptionFilter } from './common/filters/app-exception.filter';
-import { ConfigsService, isProduction } from './config/configs.service';
+import { ConfigsService } from './config/configs.service';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-
   const configs = app.get(ConfigsService);
 
   app.setGlobalPrefix(configs.API_PREFIX, {
-    exclude: ['docs', 'docs/(.*)', 'openapi.json'],
+    exclude: [...configs.APP.DOCS_EXCLUDE_ROUTES],
   });
-  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: configs.APP.API_DEFAULT_VERSION,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -32,26 +34,29 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  if (!isProduction()) {
+  if (configs.NODE_ENV !== 'production') {
     const openApiConfig = new DocumentBuilder()
-      .setTitle('Cafe Menu Backend')
-      .setDescription('API for Persian cafe and restaurant menu application')
-      .setVersion('1.0')
+      .setTitle(configs.APP.NAME)
+      .setDescription(configs.APP.DESCRIPTION)
+      .setVersion(configs.APP.OPENAPI_VERSION)
       .addBearerAuth()
       .build();
 
     const document = SwaggerModule.createDocument(app, openApiConfig);
 
-    app.getHttpAdapter().get('/openapi.json', (_req: unknown, res: { json: (body: unknown) => void }) => {
-      res.json(document);
-    });
+    app.getHttpAdapter().get(
+      `/${configs.APP.OPENAPI_JSON_PATH}`,
+      (_req: unknown, res: { json: (body: unknown) => void }) => {
+        res.json(document);
+      },
+    );
 
     app.use(
-      '/docs',
+      `/${configs.APP.DOCS_PATH}`,
       apiReference({
         content: document,
-        theme: 'default',
-        darkMode: true,
+        theme: configs.APP.SCALAR_THEME,
+        darkMode: configs.APP.SCALAR_DARK_MODE,
       }),
     );
   }
@@ -59,9 +64,9 @@ async function bootstrap(): Promise<void> {
   await app.listen(configs.PORT);
   // eslint-disable-next-line no-console
   console.log(`Server running on http://localhost:${configs.PORT}/${configs.API_PREFIX}`);
-  if (!isProduction()) {
+  if (configs.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
-    console.log(`API docs (Scalar): http://localhost:${configs.PORT}/docs`);
+    console.log(`API docs (Scalar): http://localhost:${configs.PORT}/${configs.APP.DOCS_PATH}`);
   }
 }
 
