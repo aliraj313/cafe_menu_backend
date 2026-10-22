@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -37,20 +38,23 @@ export class ProductsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a product by id' })
-  findOne(@Param('id') id: string): Promise<ProductResponse> {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<ProductResponse> {
     return this.productsService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a product' })
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto): Promise<ProductResponse> {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProductDto,
+  ): Promise<ProductResponse> {
     return this.productsService.update(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a product' })
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.productsService.remove(id);
   }
 }

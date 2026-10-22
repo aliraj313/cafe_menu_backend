@@ -10,7 +10,7 @@ export class CategoriesRepository {
     return this.prisma.category.create({ data });
   }
 
-  findById(id: string): Promise<Category | null> {
+  findById(id: number): Promise<Category | null> {
     return this.prisma.category.findUnique({ where: { id } });
   }
 
@@ -33,15 +33,15 @@ export class CategoriesRepository {
     return this.prisma.category.count();
   }
 
-  update(id: string, data: Prisma.CategoryUpdateInput): Promise<Category> {
+  update(id: number, data: Prisma.CategoryUpdateInput): Promise<Category> {
     return this.prisma.category.update({ where: { id }, data });
   }
 
-  delete(id: string): Promise<Category> {
+  delete(id: number): Promise<Category> {
     return this.prisma.category.delete({ where: { id } });
   }
 
-  countProducts(categoryId: string): Promise<number> {
+  countProducts(categoryId: number): Promise<number> {
     return this.prisma.product.count({ where: { categoryId } });
   }
 }

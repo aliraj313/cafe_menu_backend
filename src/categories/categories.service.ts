@@ -49,7 +49,7 @@ export class CategoriesService {
     };
   }
 
-  async findOne(id: string): Promise<Category> {
+  async findOne(id: number): Promise<Category> {
     const category = await this.categoriesRepository.findById(id);
     if (!category) {
       throw new NotFoundException('CATEGORY_NOT_FOUND', 'Category was not found.');
@@ -57,7 +57,7 @@ export class CategoriesService {
     return category;
   }
 
-  async update(id: string, dto: UpdateCategoryDto): Promise<Category> {
+  async update(id: number, dto: UpdateCategoryDto): Promise<Category> {
     await this.findOne(id);
 
     if (dto.name !== undefined) {
@@ -75,7 +75,7 @@ export class CategoriesService {
     });
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: number): Promise<void> {
     await this.findOne(id);
     const productCount = await this.categoriesRepository.countProducts(id);
     if (productCount > 0) {

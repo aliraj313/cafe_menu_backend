@@ -17,9 +17,9 @@
     "test": "echo \"No unit tests yet\" && exit 0",
     "test:e2e": "echo \"No e2e tests yet\" && exit 0",
     "prisma:generate": "prisma generate",
-    "prisma:migrate:dev": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:seed": "ts-node --transpile-only prisma/seed.ts"
+    "prisma:seed": "ts-node --transpile-only prisma/seed.ts",
+    "prisma:push": "prisma db push",
+    "prisma:reset": "prisma db push --force-reset && prisma generate && npm run prisma:seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",

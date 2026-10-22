@@ -17,7 +17,7 @@ cp .env.example .env
 
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npm run prisma:reset
 npm run prisma:seed
 npm run start:dev
 ```
@@ -36,7 +36,7 @@ npm run start:dev
 | `npm run format` | Prettier write |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run prisma:migrate:dev` | Create/apply migrations |
+| `npm run prisma:push` | Create/apply migrations |
 | `npm run prisma:seed` | Seed demo data |
 
 ## Branching

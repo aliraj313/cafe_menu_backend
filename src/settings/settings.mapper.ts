@@ -1,7 +1,7 @@
 import { PaymentGatewayProvider, Prisma, Settings } from '@prisma/client';
 
 export interface SettingsResponse {
-  id: string;
+  id: number;
   cafeName: string;
   slogan: string | null;
   logoUrl: string | null;

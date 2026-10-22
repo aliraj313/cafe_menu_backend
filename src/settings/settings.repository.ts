@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SettingsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findById(id: string): Promise<Settings | null> {
+  findById(id: number): Promise<Settings | null> {
     return this.prisma.settings.findUnique({ where: { id } });
   }
 
@@ -14,7 +14,7 @@ export class SettingsRepository {
     return this.prisma.settings.create({ data });
   }
 
-  update(id: string, data: Prisma.SettingsUpdateInput): Promise<Settings> {
+  update(id: number, data: Prisma.SettingsUpdateInput): Promise<Settings> {
     return this.prisma.settings.update({ where: { id }, data });
   }
 }

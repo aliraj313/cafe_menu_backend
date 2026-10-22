@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MealType, Prisma, Product } from '@prisma/client';
+import { Prisma, Product } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductWithCategory } from './product.mapper';
 
@@ -14,7 +14,7 @@ export class ProductsRepository {
     });
   }
 
-  findById(id: string): Promise<ProductWithCategory | null> {
+  findById(id: number): Promise<ProductWithCategory | null> {
     return this.prisma.product.findUnique({
       where: { id },
       include: { category: true },
@@ -39,7 +39,7 @@ export class ProductsRepository {
     return this.prisma.product.count({ where });
   }
 
-  update(id: string, data: Prisma.ProductUpdateInput): Promise<ProductWithCategory> {
+  update(id: number, data: Prisma.ProductUpdateInput): Promise<ProductWithCategory> {
     return this.prisma.product.update({
       where: { id },
       data,
@@ -47,9 +47,7 @@ export class ProductsRepository {
     });
   }
 
-  delete(id: string): Promise<Product> {
+  delete(id: number): Promise<Product> {
     return this.prisma.product.delete({ where: { id } });
   }
 }
-
-export type { MealType };

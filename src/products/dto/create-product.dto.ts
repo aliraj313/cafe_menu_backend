@@ -1,16 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MealType } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
   Matches,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 
@@ -56,8 +59,9 @@ export class CreateProductDto {
   @IsBoolean()
   isAvailable?: boolean;
 
-  @ApiProperty({ description: 'Category id' })
-  @IsString()
-  @IsNotEmpty()
-  categoryId!: string;
+  @ApiProperty({ description: 'Category id', example: 1 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoryId!: number;
 }

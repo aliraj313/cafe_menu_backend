@@ -58,7 +58,7 @@ export class ConfigsService {
 
   /** Singleton settings row and default profile values. */
   readonly SETTINGS = {
-    SINGLETON_ID: 'default',
+    SINGLETON_ID: 1,
     DEFAULT_CAFE_NAME: 'کافه من',
   };
 

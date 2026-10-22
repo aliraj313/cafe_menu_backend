@@ -2,14 +2,15 @@ import { MealType, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const SETTINGS_ID = 'default';
+/** Must match ConfigsService.SETTINGS.SINGLETON_ID */
+const SETTINGS_SINGLETON_ID = 1;
 
 async function main(): Promise<void> {
   await prisma.settings.upsert({
-    where: { id: SETTINGS_ID },
+    where: { id: SETTINGS_SINGLETON_ID },
     update: {},
     create: {
-      id: SETTINGS_ID,
+      id: SETTINGS_SINGLETON_ID,
       cafeName: 'کافه من',
       slogan: 'طعم واقعی قهوه',
       workingHours: 'همه‌روزه ۸ صبح تا ۱۱ شب',

@@ -19,7 +19,7 @@ enum PaymentGatewayProvider {
 }
 
 model Category {
-  id        String    @id @default(cuid())
+  id        Int       @id @default(autoincrement())
   name      String    @unique
   products  Product[]
   createdAt DateTime  @default(now())
@@ -29,7 +29,7 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
   /// Price in Rial (integer). Exposed as string in API JSON.
@@ -37,7 +37,7 @@ model Product {
   images      String[] @default([])
   mealType    MealType
   isAvailable Boolean  @default(true)
-  categoryId  String
+  categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -48,27 +48,27 @@ model Product {
   @@map("products")
 }
 
-/// Singleton cafe/restaurant settings (one row, id fixed by application).
+/// Singleton cafe/restaurant settings (one row, id fixed to SETTINGS.SINGLETON_ID).
 model Settings {
-  id                         String                  @id
-  cafeName                   String
-  slogan                     String?
-  logoUrl                    String?
-  description                String?
-  phone                      String?
+  id                       Int                     @id @default(autoincrement())
+  cafeName                 String
+  slogan                   String?
+  logoUrl                  String?
+  description              String?
+  phone                    String?
   /// Free-text working hours, e.g. "همه‌روزه ۸ صبح تا ۱۱ شب"
-  workingHours               String?
-  address                    String?
-  instagramUrl               String?
-  telegramUrl                String?
-  ordersAndPaymentsEnabled   Boolean                 @default(false)
+  workingHours             String?
+  address                  String?
+  instagramUrl             String?
+  telegramUrl              String?
+  ordersAndPaymentsEnabled Boolean                 @default(false)
   /// Active gateway when orders/payments are enabled. Null when disabled.
-  paymentProvider            PaymentGatewayProvider?
+  paymentProvider          PaymentGatewayProvider?
   /// Provider-specific credentials/config (shape depends on paymentProvider).
   /// Zarinpal example: { "merchantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" }
-  paymentGatewayConfig       Json?
-  createdAt                  DateTime                @default(now())
-  updatedAt                  DateTime                @updatedAt
+  paymentGatewayConfig     Json?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
 
   @@map("settings")
 }
