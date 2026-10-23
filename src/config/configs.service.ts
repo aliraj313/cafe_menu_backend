@@ -48,7 +48,8 @@ export class ConfigsService {
     readonly SMSIR: {
       readonly API_KEY: string | undefined;
       readonly API_BASE_URL: string;
-      readonly OTP_TEMPLATE_ID: number | undefined;
+      readonly LOGIN_OTP_TEMPLATE_ID: number | undefined;
+      readonly PASSWORD_RESET_OTP_TEMPLATE_ID: number | undefined;
       readonly OTP_PARAM_NAME: string;
     };
   };
@@ -209,7 +210,10 @@ export class ConfigsService {
         API_BASE_URL: (
           this.optionalUrl('SMS_IR_API_BASE_URL') ?? this.SMS_APP.DEFAULT_API_BASE_URL
         ).replace(/\/$/, ''),
-        OTP_TEMPLATE_ID: this.optionalPositiveInt('SMS_IR_OTP_TEMPLATE_ID'),
+        LOGIN_OTP_TEMPLATE_ID: this.optionalPositiveInt('SMS_IR_LOGIN_OTP_TEMPLATE_ID'),
+        PASSWORD_RESET_OTP_TEMPLATE_ID: this.optionalPositiveInt(
+          'SMS_IR_PASSWORD_RESET_OTP_TEMPLATE_ID',
+        ),
         OTP_PARAM_NAME:
           this.optionalNonEmptyString('SMS_IR_OTP_PARAM_NAME') ??
           this.SMS_APP.DEFAULT_OTP_PARAM_NAME,
@@ -244,8 +248,11 @@ export class ConfigsService {
     if (!this.SMS.SMSIR.API_KEY) {
       throw new Error('SMS_IR_API_KEY is required in production');
     }
-    if (!this.SMS.SMSIR.OTP_TEMPLATE_ID) {
-      throw new Error('SMS_IR_OTP_TEMPLATE_ID is required in production');
+    if (!this.SMS.SMSIR.LOGIN_OTP_TEMPLATE_ID) {
+      throw new Error('SMS_IR_LOGIN_OTP_TEMPLATE_ID is required in production');
+    }
+    if (!this.SMS.SMSIR.PASSWORD_RESET_OTP_TEMPLATE_ID) {
+      throw new Error('SMS_IR_PASSWORD_RESET_OTP_TEMPLATE_ID is required in production');
     }
   }
 

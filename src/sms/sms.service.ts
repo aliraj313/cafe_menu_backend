@@ -3,11 +3,12 @@ export interface SmsMessage {
   text: string;
 }
 
+export type SmsOtpPurpose = 'LOGIN' | 'PASSWORD_RESET';
+
 export interface SmsOtpMessage {
   to: string;
   code: string;
-  /** Optional purpose for logging / future template routing */
-  purpose?: 'LOGIN' | 'PASSWORD_RESET';
+  purpose: SmsOtpPurpose;
 }
 
 export interface SmsService {

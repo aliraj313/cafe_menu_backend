@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BusinessRuleException } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
-import { SmsMessage, SmsOtpMessage, SmsService } from './sms.service';
+import { SmsMessage, SmsOtpMessage, SmsOtpPurpose, SmsService } from './sms.service';
 
 /**
  * SMS.ir provider — uses Verify API for OTP templates.
+ * Login and password-reset use separate template IDs from the SMS.ir panel.
  * @see https://api.sms.ir/v1/send/verify
  */
 @Injectable()
@@ -14,7 +15,6 @@ export class SmsIrService implements SmsService {
   constructor(private readonly configs: ConfigsService) {}
 
   async send(message: SmsMessage): Promise<void> {
-    // Plain text is not used for OTP; log and no-op unless extended later.
     this.logger.warn(
       JSON.stringify({
         provider: 'smsir',
@@ -27,12 +27,12 @@ export class SmsIrService implements SmsService {
 
   async sendOtp(message: SmsOtpMessage): Promise<void> {
     const apiKey = this.configs.SMS.SMSIR.API_KEY;
-    const templateId = this.configs.SMS.SMSIR.OTP_TEMPLATE_ID;
+    const templateId = this.resolveTemplateId(message.purpose);
 
     if (!apiKey || !templateId) {
       throw new BusinessRuleException(
         'SMS_NOT_CONFIGURED',
-        'SMS.ir API key or OTP template id is not configured.',
+        `SMS.ir API key or template id for purpose ${message.purpose} is not configured.`,
       );
     }
 
@@ -95,10 +95,18 @@ export class SmsIrService implements SmsService {
         provider: 'smsir',
         type: 'otp',
         to: mobile,
-        purpose: message.purpose ?? null,
+        purpose: message.purpose,
+        templateId,
         messageId: (payload.data as { messageId?: number } | undefined)?.messageId,
       }),
     );
+  }
+
+  private resolveTemplateId(purpose: SmsOtpPurpose): number | undefined {
+    if (purpose === 'LOGIN') {
+      return this.configs.SMS.SMSIR.LOGIN_OTP_TEMPLATE_ID;
+    }
+    return this.configs.SMS.SMSIR.PASSWORD_RESET_OTP_TEMPLATE_ID;
   }
 
   /**
