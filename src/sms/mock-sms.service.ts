@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SmsMessage, SmsService } from './sms.service';
+import { SmsMessage, SmsOtpMessage, SmsService } from './sms.service';
 
 /**
  * Development SMS provider. Logs outbound messages instead of delivering them.
- * Replace with a real provider adapter when SMS credentials are configured.
  */
 @Injectable()
 export class MockSmsService implements SmsService {
@@ -13,8 +12,22 @@ export class MockSmsService implements SmsService {
     this.logger.log(
       JSON.stringify({
         provider: 'mock',
+        type: 'text',
         to: message.to,
         text: message.text,
+        at: new Date().toISOString(),
+      }),
+    );
+  }
+
+  async sendOtp(message: SmsOtpMessage): Promise<void> {
+    this.logger.log(
+      JSON.stringify({
+        provider: 'mock',
+        type: 'otp',
+        to: message.to,
+        code: message.code,
+        purpose: message.purpose ?? null,
         at: new Date().toISOString(),
       }),
     );

@@ -147,6 +147,7 @@ model Order {
   user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   cartId      Int?
   cart        Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  tableNumber Int?
   status      OrderStatus @default(PENDING_PAYMENT)
   totalAmount BigInt
   items       OrderItem[]

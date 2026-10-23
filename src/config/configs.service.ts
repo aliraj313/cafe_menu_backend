@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 
 export type NodeEnv = 'development' | 'test' | 'production';
 export type PaymentProvider = 'mock' | 'zarinpal';
+export type SmsProvider = 'mock' | 'smsir';
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
 const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['mock', 'zarinpal'];
@@ -39,7 +40,16 @@ export class ConfigsService {
     readonly RESEND_COOLDOWN_SECONDS: number;
     readonly MAX_ATTEMPTS: number;
     readonly PEPPER: string;
-    readonly DEMO_ENABLED: boolean;
+  };
+
+  readonly SMS: {
+    readonly PROVIDER: SmsProvider;
+    readonly SMSIR: {
+      readonly API_KEY: string | undefined;
+      readonly LOGIN_OTP_TEMPLATE_ID: number | undefined;
+      readonly PASSWORD_RESET_OTP_TEMPLATE_ID: number | undefined;
+      readonly OTP_PARAM_NAME: string;
+    };
   };
 
   readonly PAYMENT: {
@@ -78,6 +88,12 @@ export class ConfigsService {
     EVENTS: {
       ORDER_PAID: 'order.paid',
     },
+  };
+
+  readonly SMS_APP = {
+    DEFAULT_API_BASE_URL: 'https://api.sms.ir/v1',
+    VERIFY_PATH: '/send/verify',
+    DEFAULT_OTP_PARAM_NAME: 'Code',
   };
 
   /** Payment-related application constants (no hardcoding elsewhere). */
@@ -127,6 +143,9 @@ export class ConfigsService {
       MAX_ITEMS: 50,
       /** Active cart lifetime in hours (then a new cart is created on next add). */
       TTL_HOURS: 24,
+    },
+    DASHBOARD: {
+      RECENT_ORDERS_LIMIT: 10,
     },
   };
 
@@ -178,7 +197,21 @@ export class ConfigsService {
         Number.MAX_SAFE_INTEGER,
       ),
       PEPPER: this.requireNonEmptyString('OTP_PEPPER'),
-      DEMO_ENABLED: this.requireBoolean('AUTH_DEMO_OTP_ENABLED'),
+    };
+
+    // Production always uses SMS.ir; non-production always uses mock (no SMS_PROVIDER env).
+    this.SMS = {
+      PROVIDER: this.NODE_ENV === 'production' ? 'smsir' : 'mock',
+      SMSIR: {
+        API_KEY: this.optionalNonEmptyString('SMS_IR_API_KEY'),
+        LOGIN_OTP_TEMPLATE_ID: this.optionalPositiveInt('SMS_IR_LOGIN_OTP_TEMPLATE_ID'),
+        PASSWORD_RESET_OTP_TEMPLATE_ID: this.optionalPositiveInt(
+          'SMS_IR_PASSWORD_RESET_OTP_TEMPLATE_ID',
+        ),
+        OTP_PARAM_NAME:
+          this.optionalNonEmptyString('SMS_IR_OTP_PARAM_NAME') ??
+          this.SMS_APP.DEFAULT_OTP_PARAM_NAME,
+      },
     };
 
     this.PAYMENT = {
@@ -197,14 +230,20 @@ export class ConfigsService {
     if (this.NODE_ENV !== 'production') {
       return;
     }
-    if (this.OTP.DEMO_ENABLED) {
-      throw new Error('AUTH_DEMO_OTP_ENABLED must be false in production');
-    }
     if (this.PAYMENT.MOCK_ENABLED) {
       throw new Error('PAYMENT_MOCK_ENABLED must be false in production');
     }
     if (!this.PAYMENT.ZARINPAL.CALLBACK_URL) {
       throw new Error('ZARINPAL_CALLBACK_URL is required in production');
+    }
+    if (!this.SMS.SMSIR.API_KEY) {
+      throw new Error('SMS_IR_API_KEY is required in production');
+    }
+    if (!this.SMS.SMSIR.LOGIN_OTP_TEMPLATE_ID) {
+      throw new Error('SMS_IR_LOGIN_OTP_TEMPLATE_ID is required in production');
+    }
+    if (!this.SMS.SMSIR.PASSWORD_RESET_OTP_TEMPLATE_ID) {
+      throw new Error('SMS_IR_PASSWORD_RESET_OTP_TEMPLATE_ID is required in production');
     }
   }
 
@@ -303,6 +342,19 @@ export class ConfigsService {
       );
     }
     return raw as PaymentProvider;
+  }
+
+
+  private optionalPositiveInt(key: string): number | undefined {
+    const value = this.optionalNonEmptyString(key);
+    if (value === undefined) {
+      return undefined;
+    }
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new Error(`Environment variable ${key} must be a positive integer`);
+    }
+    return parsed;
   }
 
   private parseMobile(raw: string): string {

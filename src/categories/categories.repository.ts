@@ -44,4 +44,12 @@ export class CategoriesRepository {
   countProducts(categoryId: number): Promise<number> {
     return this.prisma.product.count({ where: { categoryId } });
   }
+
+  /** Categories that have at least one product. */
+  findAllWithProducts(): Promise<Category[]> {
+    return this.prisma.category.findMany({
+      where: { products: { some: {} } },
+      orderBy: { name: 'asc' },
+    });
+  }
 }

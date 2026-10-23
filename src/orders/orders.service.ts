@@ -10,8 +10,11 @@ import { CartsService } from '../carts/carts.service';
 import { PaymentsRepository } from '../payments/payments.repository';
 import { ZarinpalService } from '../payments/zarinpal/zarinpal.service';
 import { PaymentSnapshot } from '../payments/zarinpal/zarinpal.types';
+import { OrderingAvailabilityService } from '../settings/ordering-availability.service';
 import { SettingsRepository } from '../settings/settings.repository';
 import { UsersRepository } from '../auth/users.repository';
+import { PaginatedResult } from '../common/types/paginated-result';
+import { ListOrdersQueryDto } from './dto/list-orders-query.dto';
 import {
   CheckoutResponse,
   OrderResponse,
@@ -30,9 +33,11 @@ export class OrdersService {
     private readonly settingsRepository: SettingsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly configs: ConfigsService,
+    private readonly orderingAvailability: OrderingAvailabilityService,
   ) {}
 
-  async checkout(userId: number): Promise<CheckoutResponse> {
+  async checkout(userId: number, tableNumber?: number | null): Promise<CheckoutResponse> {
+    await this.orderingAvailability.assertOrderingEnabled();
     const cart = await this.cartsService.requireActiveCartEntity(userId);
 
     if (cart.items.length === 0) {
@@ -68,7 +73,12 @@ export class OrdersService {
         userId,
         cartId: cart.id,
         totalAmount,
+        tableNumber: tableNumber ?? null,
         items: orderItems,
+      });
+    } else if (tableNumber !== undefined) {
+      order = await this.ordersRepository.update(order.id, {
+        tableNumber: tableNumber,
       });
     }
 
@@ -133,6 +143,42 @@ export class OrdersService {
       order: toOrderResponse(refreshed),
       payment: toPaymentResponse(payment),
     };
+  }
+
+  async adminFindAll(query: ListOrdersQueryDto): Promise<PaginatedResult<OrderResponse>> {
+    const page = query.page ?? this.configs.LIMITS.PAGINATION.DEFAULT_PAGE;
+    const limit = Math.min(
+      query.limit ?? this.configs.LIMITS.PAGINATION.DEFAULT_LIMIT,
+      this.configs.LIMITS.PAGINATION.MAX_LIMIT,
+    );
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.OrderWhereInput = {
+      ...(query.status ? { status: query.status } : {}),
+    };
+
+    const [items, total] = await Promise.all([
+      this.ordersRepository.findMany({ skip, take: limit, where }),
+      this.ordersRepository.count(where),
+    ]);
+
+    return {
+      items: items.map(toOrderResponse),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async adminFindOne(orderId: number): Promise<OrderResponse> {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundException('ORDER_NOT_FOUND', 'Order was not found.');
+    }
+    return toOrderResponse(order);
   }
 
   async get(orderId: number, userId: number): Promise<OrderResponse> {

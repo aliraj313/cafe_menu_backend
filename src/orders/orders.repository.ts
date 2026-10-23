@@ -5,12 +5,13 @@ import { OrderWithDetails } from './order.mapper';
 
 @Injectable()
 export class OrdersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   create(data: {
     userId: number;
     cartId: number;
     totalAmount: bigint;
+    tableNumber?: number | null;
     items: Array<{
       productId: number;
       productName: string;
@@ -23,6 +24,7 @@ export class OrdersRepository {
       data: {
         userId: data.userId,
         cartId: data.cartId,
+        tableNumber: data.tableNumber ?? null,
         totalAmount: data.totalAmount,
         status: OrderStatus.PENDING_PAYMENT,
         items: {
@@ -56,7 +58,6 @@ export class OrdersRepository {
       orderBy: { createdAt: 'desc' },
       include: {
         items: true,
-        payments: { orderBy: { createdAt: 'asc' } },
       },
     });
   }
@@ -70,5 +71,58 @@ export class OrdersRepository {
         payments: { orderBy: { createdAt: 'asc' } },
       },
     });
+  }
+
+  findRecent(take: number): Promise<OrderWithDetails[]> {
+    return this.prisma.order.findMany({
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+  }
+
+  countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.order.count({
+      where: { createdAt: { gte: from, lt: to } },
+    });
+  }
+
+  /**
+   * Sum of totalAmount for orders that reached PROCESSING (paid) within the range,
+   * based on updatedAt as proxy for when payment completed.
+   */
+  async sumPaidAmountBetween(from: Date, to: Date): Promise<bigint> {
+    const result = await this.prisma.order.aggregate({
+      where: {
+        status: OrderStatus.PROCESSING,
+        updatedAt: { gte: from, lt: to },
+      },
+      _sum: { totalAmount: true },
+    });
+    return result._sum.totalAmount ?? 0n;
+  }
+
+  findMany(params: {
+    skip: number;
+    take: number;
+    where: Prisma.OrderWhereInput;
+  }): Promise<OrderWithDetails[]> {
+    return this.prisma.order.findMany({
+      skip: params.skip,
+      take: params.take,
+      where: params.where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+  }
+
+  count(where: Prisma.OrderWhereInput): Promise<number> {
+    return this.prisma.order.count({ where });
   }
 }
