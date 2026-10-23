@@ -100,6 +100,8 @@ export class ConfigsService {
       MIN_QUANTITY: 1,
       MAX_QUANTITY: 99,
       MAX_ITEMS: 50,
+      /** Active cart lifetime in hours (then a new cart is created on next add). */
+      TTL_HOURS: 24,
     },
   };
 

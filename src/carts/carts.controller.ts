@@ -26,56 +26,43 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 export class CartsController {
   constructor(private readonly cartsService: CartsService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new shopping cart for the logged-in user' })
-  create(@CurrentUser() user: AuthenticatedUser): Promise<CartResponse> {
-    return this.cartsService.create(user.id);
-  }
-
   @Get('me')
-  @ApiOperation({ summary: 'Get or create the current user cart' })
-  getMine(@CurrentUser() user: AuthenticatedUser): Promise<CartResponse> {
-    return this.cartsService.getOrCreateForUser(user.id);
+  @ApiOperation({
+    summary: 'Get the active (non-expired) cart for the logged-in user, or null data',
+  })
+  async getMine(@CurrentUser() user: AuthenticatedUser): Promise<CartResponse | null> {
+    return this.cartsService.getActive(user.id);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get cart by id (owner only)' })
-  get(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<CartResponse> {
-    return this.cartsService.get(id, user.id);
-  }
-
-  @Post(':id/items')
-  @ApiOperation({ summary: 'Add a product to the cart' })
+  @Post('items')
+  @ApiOperation({
+    summary:
+      'Add product to active cart. Creates a new cart (1-day TTL) if none is active.',
+  })
   addItem(
-    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: AddCartItemDto,
   ): Promise<CartResponse> {
-    return this.cartsService.addItem(id, user.id, dto);
+    return this.cartsService.addItem(user.id, dto);
   }
 
-  @Patch(':id/items/:itemId')
-  @ApiOperation({ summary: 'Update quantity of a cart item' })
+  @Patch('items/:itemId')
+  @ApiOperation({ summary: 'Update quantity of an item in the active cart' })
   updateItem(
-    @Param('id', ParseIntPipe) id: number,
     @Param('itemId', ParseIntPipe) itemId: number,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateCartItemDto,
   ): Promise<CartResponse> {
-    return this.cartsService.updateItem(id, itemId, user.id, dto);
+    return this.cartsService.updateItem(user.id, itemId, dto);
   }
 
-  @Delete(':id/items/:itemId')
+  @Delete('items/:itemId')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Remove an item from the cart' })
+  @ApiOperation({ summary: 'Remove an item from the active cart' })
   removeItem(
-    @Param('id', ParseIntPipe) id: number,
     @Param('itemId', ParseIntPipe) itemId: number,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<CartResponse> {
-    return this.cartsService.removeItem(id, itemId, user.id);
+    return this.cartsService.removeItem(user.id, itemId);
   }
 }

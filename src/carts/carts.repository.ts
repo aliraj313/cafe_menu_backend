@@ -7,16 +7,20 @@ import { CartWithItems } from './cart.mapper';
 export class CartsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(userId: number): Promise<CartWithItems> {
+  create(userId: number, expiresAt: Date): Promise<CartWithItems> {
     return this.prisma.cart.create({
-      data: { userId },
+      data: { userId, expiresAt },
       include: { items: { include: { product: true } } },
     });
   }
 
-  findById(id: number): Promise<CartWithItems | null> {
-    return this.prisma.cart.findUnique({
-      where: { id },
+  findActiveForUser(userId: number, now: Date): Promise<CartWithItems | null> {
+    return this.prisma.cart.findFirst({
+      where: {
+        userId,
+        expiresAt: { gt: now },
+      },
+      orderBy: { createdAt: 'desc' },
       include: {
         items: {
           include: { product: true },
@@ -26,10 +30,9 @@ export class CartsRepository {
     });
   }
 
-  findLatestForUser(userId: number): Promise<CartWithItems | null> {
-    return this.prisma.cart.findFirst({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
+  findById(id: number): Promise<CartWithItems | null> {
+    return this.prisma.cart.findUnique({
+      where: { id },
       include: {
         items: {
           include: { product: true },

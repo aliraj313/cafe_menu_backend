@@ -18,8 +18,8 @@ export class OrdersService {
     private readonly cartsRepository: CartsRepository,
   ) {}
 
-  async checkout(cartId: number, userId: number): Promise<OrderResponse> {
-    const cart = await this.cartsService.requireOwnedCart(cartId, userId);
+  async checkout(userId: number): Promise<OrderResponse> {
+    const cart = await this.cartsService.requireActiveCartEntity(userId);
 
     if (cart.items.length === 0) {
       throw new BusinessRuleException('CART_EMPTY', 'Cannot checkout an empty cart.');
@@ -49,12 +49,12 @@ export class OrdersService {
 
     const order = await this.ordersRepository.create({
       userId,
-      cartId,
+      cartId: cart.id,
       totalAmount,
       items: orderItems,
     });
 
-    await this.cartsRepository.clearItems(cartId);
+    await this.cartsRepository.clearItems(cart.id);
 
     return toOrderResponse(order);
   }

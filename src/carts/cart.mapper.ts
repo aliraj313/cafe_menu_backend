@@ -19,6 +19,7 @@ export interface CartItemResponse {
 
 export interface CartResponse {
   id: number;
+  expiresAt: Date;
   items: CartItemResponse[];
   totalAmount: string;
   itemsCount: number;
@@ -48,6 +49,7 @@ export function toCartResponse(cart: CartWithItems): CartResponse {
 
   return {
     id: cart.id,
+    expiresAt: cart.expiresAt,
     items,
     totalAmount: total.toString(),
     itemsCount: items.reduce((sum, i) => sum + i.quantity, 0),
