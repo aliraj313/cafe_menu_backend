@@ -5,7 +5,7 @@ import { OrderWithDetails } from './order.mapper';
 
 @Injectable()
 export class OrdersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   create(data: {
     userId: number;
@@ -58,7 +58,6 @@ export class OrdersRepository {
       orderBy: { createdAt: 'desc' },
       include: {
         items: true,
-        payments: { orderBy: { createdAt: 'asc' } },
       },
     });
   }

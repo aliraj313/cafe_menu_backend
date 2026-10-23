@@ -2,8 +2,7 @@ import { Order, OrderItem, OrderStatus, Payment, PaymentStatus, Prisma } from '.
 
 export type OrderWithDetails = Order & {
   items: OrderItem[];
-  payments: Payment[];
-};
+ };
 
 export interface OrderItemResponse {
   id: number;
@@ -37,7 +36,6 @@ export interface OrderResponse {
   status: OrderStatus;
   totalAmount: string;
   items: OrderItemResponse[];
-  payments: PaymentResponse[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,7 +87,6 @@ export function toOrderResponse(order: OrderWithDetails): OrderResponse {
       quantity: item.quantity,
       lineTotal: item.lineTotal.toString(),
     })),
-    payments: (order.payments ?? []).map(toPaymentResponse),
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   };
