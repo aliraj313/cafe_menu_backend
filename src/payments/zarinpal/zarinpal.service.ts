@@ -12,16 +12,13 @@ import {
 export class ZarinpalService {
   private readonly logger = new Logger(ZarinpalService.name);
 
-  constructor(private readonly configs: ConfigsService) {}
+  constructor(private readonly configs: ConfigsService) { }
 
   isSandbox(): boolean {
     return !isProduction();
   }
 
   getBaseUrl(): string {
-    if (this.configs.PAYMENT.ZARINPAL.API_BASE_URL) {
-      return this.configs.PAYMENT.ZARINPAL.API_BASE_URL.replace(/\/$/, '');
-    }
     return this.isSandbox()
       ? this.configs.PAYMENT_APP.ZARINPAL.SANDBOX_BASE_URL
       : this.configs.PAYMENT_APP.ZARINPAL.PRODUCTION_BASE_URL;

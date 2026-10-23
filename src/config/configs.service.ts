@@ -48,8 +48,7 @@ export class ConfigsService {
     readonly ZARINPAL: {
       readonly MERCHANT_ID: string | undefined;
       readonly CALLBACK_URL: string | undefined;
-      readonly API_BASE_URL: string | undefined;
-    };
+     };
   };
 
   /** Application-wide constants (never hardcode these elsewhere). */
@@ -188,8 +187,7 @@ export class ConfigsService {
       ZARINPAL: {
         MERCHANT_ID: this.optionalNonEmptyString('ZARINPAL_MERCHANT_ID'),
         CALLBACK_URL: this.optionalUrl('ZARINPAL_CALLBACK_URL'),
-        API_BASE_URL: this.optionalUrl('ZARINPAL_API_BASE_URL'),
-      },
+       },
     };
 
     this.assertProductionSafety();
