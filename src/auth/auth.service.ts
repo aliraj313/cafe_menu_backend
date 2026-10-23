@@ -164,6 +164,7 @@ export class AuthService {
     }
   }
 
+
   async forgotPassword(dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
     const user = await this.usersRepository.findByMobile(dto.mobile);
     const generic: ForgotPasswordResponse = {
@@ -207,7 +208,7 @@ export class AuthService {
       text: `Cafe Menu password reset code: ${otp}`,
     });
 
-    return generic;
+    return { ...generic, ...(!isProduction() && { otp }) };
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
