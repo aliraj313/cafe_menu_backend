@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-export type NodeEnv = 'development' | 'test' | 'production';
+export type NodeEnv = 'development' | 'production';
 export type PaymentProvider = 'mock' | 'zarinpal';
 export type SmsProvider = 'mock' | 'smsir';
 
-const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
-const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['mock', 'zarinpal'];
+const NODE_ENVS: readonly NodeEnv[] = ['development', 'production'];
+
 
 @Injectable()
 export class ConfigsService {
@@ -14,7 +14,7 @@ export class ConfigsService {
   readonly PORT: number;
   readonly DATABASE_URL: string;
   readonly FRONTEND_ORIGIN: string;
- 
+
   /** Fixed business timezone (not env-driven). */
   readonly BUSINESS_TIMEZONE = 'Asia/Tehran' as const;
 
@@ -53,8 +53,6 @@ export class ConfigsService {
   };
 
   readonly PAYMENT: {
-    readonly PROVIDER: PaymentProvider;
-    readonly MOCK_ENABLED: boolean;
     readonly ZARINPAL: {
       readonly MERCHANT_ID: string | undefined;
       readonly CALLBACK_URL: string | undefined;
@@ -185,9 +183,7 @@ export class ConfigsService {
     };
 
     this.PAYMENT = {
-      PROVIDER: this.parsePaymentProvider(this.requireString('PAYMENT_PROVIDER')),
       // Mock payment flows active in non-production only
-      MOCK_ENABLED: this.NODE_ENV !== 'production',
       ZARINPAL: {
         MERCHANT_ID: this.optionalNonEmptyString('ZARINPAL_MERCHANT_ID'),
         CALLBACK_URL: this.optionalUrl('ZARINPAL_CALLBACK_URL'),
@@ -260,15 +256,6 @@ export class ConfigsService {
       throw new Error(`Environment variable NODE_ENV must be one of: ${NODE_ENVS.join(', ')}`);
     }
     return raw as NodeEnv;
-  }
-
-  private parsePaymentProvider(raw: string): PaymentProvider {
-    if (!PAYMENT_PROVIDERS.includes(raw as PaymentProvider)) {
-      throw new Error(
-        `Environment variable PAYMENT_PROVIDER must be one of: ${PAYMENT_PROVIDERS.join(', ')}`,
-      );
-    }
-    return raw as PaymentProvider;
   }
 
 
