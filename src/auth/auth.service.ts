@@ -82,7 +82,7 @@ export class AuthService {
     });
 
     return {
-      message: 'If the mobile number is valid, an OTP has been sent.',
+      message: 'OTP has been sent.',
       resendAvailableInSeconds: this.configs.OTP.RESEND_COOLDOWN_SECONDS,
     };
   }
