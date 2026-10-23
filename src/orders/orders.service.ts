@@ -67,13 +67,6 @@ export class OrdersService {
         totalAmount,
         items: orderItems,
       });
-    } else {
-      // Re-open for a new payment attempt after a previous failure.
-      if (order.status === OrderStatus.PAYMENT_FAILED) {
-        order = await this.ordersRepository.update(order.id, {
-          status: OrderStatus.PENDING_PAYMENT,
-        });
-      }
     }
 
     const payment = await this.paymentsRepository.create({

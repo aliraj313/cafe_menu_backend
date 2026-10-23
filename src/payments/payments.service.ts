@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '../common/exceptions/app.exception';
+import { CartsRepository } from '../carts/carts.repository';
 import { OrdersRepository } from '../orders/orders.repository';
 import {
   CheckoutResponse,
@@ -23,6 +24,7 @@ export class PaymentsService {
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersRepository: OrdersRepository,
+    private readonly cartsRepository: CartsRepository,
   ) {}
 
   async mockPay(
@@ -73,6 +75,12 @@ export class PaymentsService {
         status: OrderStatus.PROCESSING,
       });
 
+      // Empty cart items but keep the row; expire so next order uses a new cart.
+      if (order.cartId !== null) {
+        await this.cartsRepository.clearItems(order.cartId);
+        await this.cartsRepository.expireCart(order.cartId, new Date());
+      }
+
       // TODO: emit realtime event to admin panel when order enters PROCESSING
 
       return {
@@ -81,6 +89,7 @@ export class PaymentsService {
       };
     }
 
+    // Failure: keep cart items, order remains PENDING_PAYMENT for another payment attempt.
     const updatedPayment = await this.paymentsRepository.update(payment.id, {
       status: PaymentStatus.FAILED,
       paymentRef,
@@ -88,7 +97,7 @@ export class PaymentsService {
     });
 
     const updatedOrder = await this.ordersRepository.update(order.id, {
-      status: OrderStatus.PAYMENT_FAILED,
+      status: OrderStatus.PENDING_PAYMENT,
     });
 
     return {

@@ -76,4 +76,13 @@ export class CartsRepository {
   clearItems(cartId: number): Promise<Prisma.BatchPayload> {
     return this.prisma.cartItem.deleteMany({ where: { cartId } });
   }
+
+  /** Marks cart as expired so the next add-to-cart creates a new cart. */
+  expireCart(cartId: number, expiresAt: Date): Promise<{ id: number }> {
+    return this.prisma.cart.update({
+      where: { id: cartId },
+      data: { expiresAt },
+      select: { id: true },
+    });
+  }
 }

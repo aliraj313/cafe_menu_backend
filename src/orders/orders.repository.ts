@@ -51,9 +51,7 @@ export class OrdersRepository {
       where: {
         userId,
         cartId,
-        status: {
-          in: [OrderStatus.PENDING_PAYMENT, OrderStatus.PAYMENT_FAILED],
-        },
+        status: OrderStatus.PENDING_PAYMENT,
       },
       orderBy: { createdAt: 'desc' },
       include: {
