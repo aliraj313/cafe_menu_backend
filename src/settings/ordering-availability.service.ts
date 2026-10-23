@@ -34,7 +34,7 @@ export class OrderingAvailabilityService {
     if (!merchant) {
       throw new BusinessRuleException(
         'ORDERING_DISABLED',
-        'Ordering and payment are disabled because Zarinpal merchant is not configured.',
+        'Ordering and payment are disabled.',
       );
     }
   }
