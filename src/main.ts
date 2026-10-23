@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
@@ -11,12 +11,10 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const configs = app.get(ConfigsService);
 
+  // API_PREFIX already includes the version segment (e.g. api/v1).
+  // Do not enable URI versioning on top of that, or routes become /api/v1/v1/...
   app.setGlobalPrefix(configs.API_PREFIX, {
     exclude: [...configs.APP.DOCS_EXCLUDE_ROUTES],
-  });
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: configs.APP.API_DEFAULT_VERSION,
   });
 
   app.useGlobalPipes(

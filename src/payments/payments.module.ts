@@ -7,6 +7,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsRepository } from './payments.repository';
 import { PaymentsService } from './payments.service';
+import { ZarinpalCallbackController } from './zarinpal-callback.controller';
 import { ZarinpalService } from './zarinpal/zarinpal.service';
 
 @Module({
@@ -17,7 +18,7 @@ import { ZarinpalService } from './zarinpal/zarinpal.service';
     SettingsModule,
     AuthModule,
   ],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, ZarinpalCallbackController],
   providers: [PaymentsService, PaymentsRepository, ZarinpalService],
   exports: [PaymentsRepository, ZarinpalService],
 })
