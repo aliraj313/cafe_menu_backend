@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Otp, Prisma } from '../generated/prisma/client';
+import { Otp, OtpPurpose, Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -10,10 +10,15 @@ export class OtpsRepository {
     return this.prisma.otp.create({ data });
   }
 
-  findLatestActiveForUser(userId: number, now: Date): Promise<Otp | null> {
+  findLatestActive(
+    mobile: string,
+    purpose: OtpPurpose,
+    now: Date,
+  ): Promise<Otp | null> {
     return this.prisma.otp.findFirst({
       where: {
-        userId,
+        mobile,
+        purpose,
         consumedAt: null,
         expiresAt: { gt: now },
       },
@@ -21,9 +26,9 @@ export class OtpsRepository {
     });
   }
 
-  findLatestForUser(userId: number): Promise<Otp | null> {
+  findLatest(mobile: string, purpose: OtpPurpose): Promise<Otp | null> {
     return this.prisma.otp.findFirst({
-      where: { userId },
+      where: { mobile, purpose },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -42,9 +47,13 @@ export class OtpsRepository {
     });
   }
 
-  consumeAllActiveForUser(userId: number, consumedAt: Date): Promise<Prisma.BatchPayload> {
+  consumeAllActive(
+    mobile: string,
+    purpose: OtpPurpose,
+    consumedAt: Date,
+  ): Promise<Prisma.BatchPayload> {
     return this.prisma.otp.updateMany({
-      where: { userId, consumedAt: null },
+      where: { mobile, purpose, consumedAt: null },
       data: { consumedAt },
     });
   }

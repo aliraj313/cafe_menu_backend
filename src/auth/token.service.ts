@@ -37,12 +37,12 @@ export class TokenService {
 
     const accessToken = await this.jwtService.signAsync(accessPayload, {
       secret: this.configs.JWT.ACCESS.SECRET,
-      expiresIn: this.configs.JWT.ACCESS.TTL as `${number}${'s' | 'm' | 'h' | 'd'}`,
+      expiresIn: this.configs.JWT.ACCESS.TTL as `${number}${'s' | 'm' | 'h' | 'd' | 'y'}`,
     });
 
     const refreshToken = await this.jwtService.signAsync(refreshPayload, {
       secret: this.configs.JWT.REFRESH.SECRET,
-      expiresIn: this.configs.JWT.REFRESH.TTL as `${number}${'s' | 'm' | 'h' | 'd'}`,
+      expiresIn: this.configs.JWT.REFRESH.TTL as `${number}${'s' | 'm' | 'h' | 'd' | 'y'}`,
     });
 
     const expiresAt = this.computeExpiryDate(this.configs.JWT.REFRESH.TTL);
@@ -76,9 +76,9 @@ export class TokenService {
   }
 
   private computeExpiryDate(ttl: string): Date {
-    const match = /^(\d+)([smhd])$/.exec(ttl.trim());
+    const match = /^(\d+)([smhdy])$/.exec(ttl.trim());
     if (!match) {
-      return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
     }
     const amount = Number(match[1]);
     const unit = match[2];
@@ -87,6 +87,7 @@ export class TokenService {
       m: 60 * 1000,
       h: 60 * 60 * 1000,
       d: 24 * 60 * 60 * 1000,
+      y: 365 * 24 * 60 * 60 * 1000,
     };
     return new Date(Date.now() + amount * multipliers[unit]);
   }

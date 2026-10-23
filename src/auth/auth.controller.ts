@@ -6,7 +6,9 @@ import { Public } from './decorators/public.decorator';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RequestLoginOtpDto } from './dto/request-login-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyLoginOtpDto } from './dto/verify-login-otp.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -16,9 +18,27 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login with mobile and password' })
+  @ApiOperation({ summary: 'Admin login with mobile and password' })
   login(@Body() dto: LoginDto): Promise<AuthTokensResponse> {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('otp/request')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request login OTP for customer (SMS mock)' })
+  requestLoginOtp(@Body() dto: RequestLoginOtpDto): Promise<ForgotPasswordResponse> {
+    return this.authService.requestLoginOtp(dto);
+  }
+
+  @Public()
+  @Post('otp/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify login OTP; upserts customer user if missing and returns tokens',
+  })
+  verifyLoginOtp(@Body() dto: VerifyLoginOtpDto): Promise<AuthTokensResponse> {
+    return this.authService.verifyLoginOtp(dto);
   }
 
   @Public()
@@ -41,7 +61,7 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Request password-reset OTP via SMS (mock logged in dev)' })
+  @ApiOperation({ summary: 'Request password-reset OTP (admin accounts with password)' })
   forgotPassword(@Body() dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
     return this.authService.forgotPassword(dto);
   }

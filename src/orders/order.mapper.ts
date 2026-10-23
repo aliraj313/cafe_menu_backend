@@ -13,6 +13,7 @@ export interface OrderItemResponse {
 
 export interface OrderResponse {
   id: number;
+  userId: number;
   cartId: number | null;
   status: OrderStatus;
   totalAmount: string;
@@ -28,6 +29,7 @@ export interface OrderResponse {
 export function toOrderResponse(order: OrderWithItems): OrderResponse {
   return {
     id: order.id,
+    userId: order.userId,
     cartId: order.cartId,
     status: order.status,
     totalAmount: order.totalAmount.toString(),

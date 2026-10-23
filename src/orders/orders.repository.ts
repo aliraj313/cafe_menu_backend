@@ -8,6 +8,7 @@ export class OrdersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   create(data: {
+    userId: number;
     cartId: number;
     totalAmount: bigint;
     items: Array<{
@@ -20,6 +21,7 @@ export class OrdersRepository {
   }): Promise<OrderWithItems> {
     return this.prisma.order.create({
       data: {
+        userId: data.userId,
         cartId: data.cartId,
         totalAmount: data.totalAmount,
         status: OrderStatus.PENDING_PAYMENT,
@@ -38,10 +40,7 @@ export class OrdersRepository {
     });
   }
 
-  updateStatus(
-    id: number,
-    data: Prisma.OrderUpdateInput,
-  ): Promise<OrderWithItems> {
+  updateStatus(id: number, data: Prisma.OrderUpdateInput): Promise<OrderWithItems> {
     return this.prisma.order.update({
       where: { id },
       data,

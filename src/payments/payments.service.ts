@@ -12,8 +12,12 @@ export class PaymentsService {
     private readonly ordersRepository: OrdersRepository,
   ) {}
 
-  async mockPay(orderId: number, outcome: MockPaymentOutcome): Promise<OrderResponse> {
-    await this.ordersService.requirePendingOrder(orderId);
+  async mockPay(
+    orderId: number,
+    userId: number,
+    outcome: MockPaymentOutcome,
+  ): Promise<OrderResponse> {
+    await this.ordersService.requirePendingOrder(orderId, userId);
 
     const paymentRef = `MOCK-${randomUUID()}`;
     const now = new Date();

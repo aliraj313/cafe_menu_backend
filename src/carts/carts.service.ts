@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   BusinessRuleException,
+  ForbiddenException,
   NotFoundException,
 } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
@@ -18,18 +19,26 @@ export class CartsService {
     private readonly configs: ConfigsService,
   ) {}
 
-  async create(): Promise<CartResponse> {
-    const cart = await this.cartsRepository.create();
+  async create(userId: number): Promise<CartResponse> {
+    const cart = await this.cartsRepository.create(userId);
     return toCartResponse(cart);
   }
 
-  async get(cartId: number): Promise<CartResponse> {
-    const cart = await this.requireCart(cartId);
+  async getOrCreateForUser(userId: number): Promise<CartResponse> {
+    const existing = await this.cartsRepository.findLatestForUser(userId);
+    if (existing) {
+      return toCartResponse(existing);
+    }
+    return this.create(userId);
+  }
+
+  async get(cartId: number, userId: number): Promise<CartResponse> {
+    const cart = await this.requireOwnedCart(cartId, userId);
     return toCartResponse(cart);
   }
 
-  async addItem(cartId: number, dto: AddCartItemDto): Promise<CartResponse> {
-    await this.requireCart(cartId);
+  async addItem(cartId: number, userId: number, dto: AddCartItemDto): Promise<CartResponse> {
+    await this.requireOwnedCart(cartId, userId);
     this.assertQuantity(dto.quantity);
 
     const product = await this.productsRepository.findById(dto.productId);
@@ -63,15 +72,16 @@ export class CartsService {
       });
     }
 
-    return this.get(cartId);
+    return this.get(cartId, userId);
   }
 
   async updateItem(
     cartId: number,
     itemId: number,
+    userId: number,
     dto: UpdateCartItemDto,
   ): Promise<CartResponse> {
-    await this.requireCart(cartId);
+    await this.requireOwnedCart(cartId, userId);
     this.assertQuantity(dto.quantity);
 
     const item = await this.cartsRepository.findItem(cartId, itemId);
@@ -88,23 +98,26 @@ export class CartsService {
     }
 
     await this.cartsRepository.updateItemQuantity(item.id, dto.quantity);
-    return this.get(cartId);
+    return this.get(cartId, userId);
   }
 
-  async removeItem(cartId: number, itemId: number): Promise<CartResponse> {
-    await this.requireCart(cartId);
+  async removeItem(cartId: number, itemId: number, userId: number): Promise<CartResponse> {
+    await this.requireOwnedCart(cartId, userId);
     const item = await this.cartsRepository.findItem(cartId, itemId);
     if (!item) {
       throw new NotFoundException('CART_ITEM_NOT_FOUND', 'Cart item was not found.');
     }
     await this.cartsRepository.deleteItem(item.id);
-    return this.get(cartId);
+    return this.get(cartId, userId);
   }
 
-  async requireCart(cartId: number) {
+  async requireOwnedCart(cartId: number, userId: number) {
     const cart = await this.cartsRepository.findById(cartId);
     if (!cart) {
       throw new NotFoundException('CART_NOT_FOUND', 'Cart was not found.');
+    }
+    if (cart.userId !== userId) {
+      throw new ForbiddenException('CART_FORBIDDEN', 'You do not own this cart.');
     }
     return cart;
   }

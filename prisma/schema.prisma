@@ -15,6 +15,12 @@ enum MealType {
 
 enum UserRole {
   ADMIN
+  CUSTOMER
+}
+
+enum OtpPurpose {
+  LOGIN
+  PASSWORD_RESET
 }
 
 enum OrderStatus {
@@ -30,15 +36,17 @@ enum MockPaymentOutcome {
 }
 
 model User {
-  id                Int                @id @default(autoincrement())
-  mobile            String             @unique
-  passwordHash      String
-  role              UserRole           @default(ADMIN)
-  isActive          Boolean            @default(true)
-  refreshTokens     RefreshToken[]
-  otps              Otp[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id           Int            @id @default(autoincrement())
+  mobile       String         @unique
+  passwordHash String?
+  role         UserRole       @default(CUSTOMER)
+  isActive     Boolean        @default(true)
+  refreshTokens RefreshToken[]
+  otps         Otp[]
+  carts        Cart[]
+  orders       Order[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([role])
 }
@@ -56,15 +64,18 @@ model RefreshToken {
 }
 
 model Otp {
-  id           Int       @id @default(autoincrement())
-  userId       Int
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           Int        @id @default(autoincrement())
+  mobile       String
+  purpose      OtpPurpose
+  userId       Int?
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   codeHash     String
   expiresAt    DateTime
-  attemptCount Int       @default(0)
+  attemptCount Int        @default(0)
   consumedAt   DateTime?
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime   @default(now())
 
+  @@index([mobile, purpose])
   @@index([userId])
 }
 
@@ -97,10 +108,14 @@ model Product {
 
 model Cart {
   id        Int        @id @default(autoincrement())
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     CartItem[]
   orders    Order[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+
+  @@index([userId])
 }
 
 model CartItem {
@@ -119,21 +134,24 @@ model CartItem {
 }
 
 model Order {
-  id             Int         @id @default(autoincrement())
-  cartId         Int?
-  cart           Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
-  status         OrderStatus @default(PENDING_PAYMENT)
-  totalAmount    BigInt
-  items          OrderItem[]
-  paymentRef     String?
-  paidAt         DateTime?
-  failedAt       DateTime?
-  failureReason  String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  cartId        Int?
+  cart          Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  status        OrderStatus @default(PENDING_PAYMENT)
+  totalAmount   BigInt
+  items         OrderItem[]
+  paymentRef    String?
+  paidAt        DateTime?
+  failedAt      DateTime?
+  failureReason String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([status])
   @@index([cartId])
+  @@index([userId])
 }
 
 model OrderItem {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '../generated/prisma/client';
+import { Prisma, User, UserRole } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -16,6 +16,20 @@ export class UsersRepository {
 
   create(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({ data });
+  }
+
+  upsertByMobile(mobile: string, role: UserRole): Promise<User> {
+    return this.prisma.user.upsert({
+      where: { mobile },
+      update: {
+        isActive: true,
+      },
+      create: {
+        mobile,
+        role,
+        isActive: true,
+      },
+    });
   }
 
   updatePassword(id: number, passwordHash: string): Promise<User> {

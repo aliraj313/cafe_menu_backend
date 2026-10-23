@@ -1,24 +1,33 @@
 import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from '../auth/decorators/public.decorator';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  AuthenticatedUser,
+  CurrentUser,
+} from '../auth/decorators/current-user.decorator';
 import { OrderResponse } from './order.mapper';
 import { OrdersService } from './orders.service';
 
 @ApiTags('orders')
-@Public()
+@ApiBearerAuth()
 @Controller()
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post('carts/:cartId/checkout')
-  @ApiOperation({ summary: 'Create an order from cart and prepare for payment' })
-  checkout(@Param('cartId', ParseIntPipe) cartId: number): Promise<OrderResponse> {
-    return this.ordersService.checkout(cartId);
+  @ApiOperation({ summary: 'Create order from cart (requires login)' })
+  checkout(
+    @Param('cartId', ParseIntPipe) cartId: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<OrderResponse> {
+    return this.ordersService.checkout(cartId, user.id);
   }
 
   @Get('orders/:id')
-  @ApiOperation({ summary: 'Get order by id' })
-  get(@Param('id', ParseIntPipe) id: number): Promise<OrderResponse> {
-    return this.ordersService.get(id);
+  @ApiOperation({ summary: 'Get order by id (owner only)' })
+  get(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<OrderResponse> {
+    return this.ordersService.get(id, user.id);
   }
 }
