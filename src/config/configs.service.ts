@@ -7,7 +7,6 @@ export type SmsProvider = 'mock' | 'smsir';
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
 const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['mock', 'zarinpal'];
-const SMS_PROVIDERS: readonly SmsProvider[] = ['mock', 'smsir'];
 
 @Injectable()
 export class ConfigsService {
@@ -202,8 +201,9 @@ export class ConfigsService {
       DEMO_ENABLED: this.requireBoolean('AUTH_DEMO_OTP_ENABLED'),
     };
 
+    // Production always uses SMS.ir; non-production always uses mock (no SMS_PROVIDER env).
     this.SMS = {
-      PROVIDER: this.parseSmsProvider(this.requireString('SMS_PROVIDER')),
+      PROVIDER: this.NODE_ENV === 'production' ? 'smsir' : 'mock',
       SMSIR: {
         API_KEY: this.optionalNonEmptyString('SMS_IR_API_KEY'),
         API_BASE_URL: (
@@ -241,15 +241,11 @@ export class ConfigsService {
     if (!this.PAYMENT.ZARINPAL.CALLBACK_URL) {
       throw new Error('ZARINPAL_CALLBACK_URL is required in production');
     }
-    if (this.SMS.PROVIDER === 'smsir') {
-      if (!this.SMS.SMSIR.API_KEY) {
-        throw new Error('SMS_IR_API_KEY is required when SMS_PROVIDER=smsir in production');
-      }
-      if (!this.SMS.SMSIR.OTP_TEMPLATE_ID) {
-        throw new Error(
-          'SMS_IR_OTP_TEMPLATE_ID is required when SMS_PROVIDER=smsir in production',
-        );
-      }
+    if (!this.SMS.SMSIR.API_KEY) {
+      throw new Error('SMS_IR_API_KEY is required in production');
+    }
+    if (!this.SMS.SMSIR.OTP_TEMPLATE_ID) {
+      throw new Error('SMS_IR_OTP_TEMPLATE_ID is required in production');
     }
   }
 
@@ -350,14 +346,6 @@ export class ConfigsService {
     return raw as PaymentProvider;
   }
 
-  private parseSmsProvider(raw: string): SmsProvider {
-    if (!SMS_PROVIDERS.includes(raw as SmsProvider)) {
-      throw new Error(
-        `Environment variable SMS_PROVIDER must be one of: ${SMS_PROVIDERS.join(', ')}`,
-      );
-    }
-    return raw as SmsProvider;
-  }
 
   private optionalPositiveInt(key: string): number | undefined {
     const value = this.optionalNonEmptyString(key);

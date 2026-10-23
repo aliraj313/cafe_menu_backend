@@ -17,6 +17,7 @@ import { SmsIrService } from './smsir.service';
         mock: MockSmsService,
         smsir: SmsIrService,
       ): SmsService => {
+        // configs.SMS.PROVIDER is derived from NODE_ENV (production → smsir, else mock)
         return configs.SMS.PROVIDER === 'smsir' ? smsir : mock;
       },
       inject: [ConfigsService, MockSmsService, SmsIrService],
