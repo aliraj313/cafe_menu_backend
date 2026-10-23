@@ -128,6 +128,9 @@ export class ConfigsService {
       /** Active cart lifetime in hours (then a new cart is created on next add). */
       TTL_HOURS: 24,
     },
+    DASHBOARD: {
+      RECENT_ORDERS_LIMIT: 10,
+    },
   };
 
   constructor(private readonly configService: ConfigService) {

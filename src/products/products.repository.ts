@@ -57,4 +57,12 @@ export class ProductsRepository {
   delete(id: number): Promise<Product> {
     return this.prisma.product.delete({ where: { id } });
   }
+
+  countAll(): Promise<number> {
+    return this.prisma.product.count();
+  }
+
+  countByAvailability(isAvailable: boolean): Promise<number> {
+    return this.prisma.product.count({ where: { isAvailable } });
+  }
 }

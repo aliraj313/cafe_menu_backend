@@ -71,4 +71,36 @@ export class OrdersRepository {
       },
     });
   }
+
+  findRecent(take: number): Promise<OrderWithDetails[]> {
+    return this.prisma.order.findMany({
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+  }
+
+  countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.order.count({
+      where: { createdAt: { gte: from, lt: to } },
+    });
+  }
+
+  /**
+   * Sum of totalAmount for orders that reached PROCESSING (paid) within the range,
+   * based on updatedAt as proxy for when payment completed.
+   */
+  async sumPaidAmountBetween(from: Date, to: Date): Promise<bigint> {
+    const result = await this.prisma.order.aggregate({
+      where: {
+        status: OrderStatus.PROCESSING,
+        updatedAt: { gte: from, lt: to },
+      },
+      _sum: { totalAmount: true },
+    });
+    return result._sum.totalAmount ?? 0n;
+  }
 }
