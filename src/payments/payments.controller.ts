@@ -4,8 +4,9 @@ import {
   AuthenticatedUser,
   CurrentUser,
 } from '../auth/decorators/current-user.decorator';
+import { CheckoutResponse } from '../orders/order.mapper';
 import { MockPaymentDto } from './dto/mock-payment.dto';
-import { MockPaymentResult, PaymentsService } from './payments.service';
+import { PaymentsService } from './payments.service';
 
 @ApiTags('payments')
 @ApiBearerAuth()
@@ -17,12 +18,12 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'Mock payment attempt (SUCCESS/FAILURE). Creates a Payment row; order can be retried after failure. Cart is never cleared.',
+      'Finalize a PENDING payment from checkout (SUCCESS → order PROCESSING, FAILURE → retry via checkout)',
   })
   mockPay(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: MockPaymentDto,
-  ): Promise<MockPaymentResult> {
-    return this.paymentsService.mockPay(dto.orderId, user.id, dto.outcome);
+  ): Promise<CheckoutResponse> {
+    return this.paymentsService.mockPay(dto.paymentId, user.id, dto.outcome);
   }
 }

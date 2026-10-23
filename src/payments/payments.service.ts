@@ -5,64 +5,84 @@ import {
   PaymentStatus,
 } from '../generated/prisma/client';
 import { randomUUID } from 'crypto';
-import { ConfigsService } from '../config/configs.service';
-import { OrdersRepository } from '../orders/orders.repository';
-import { OrdersService } from '../orders/orders.service';
 import {
-  OrderResponse,
-  PaymentResponse,
+  BusinessRuleException,
+  ForbiddenException,
+  NotFoundException,
+} from '../common/exceptions/app.exception';
+import { OrdersRepository } from '../orders/orders.repository';
+import {
+  CheckoutResponse,
   toOrderResponse,
   toPaymentResponse,
 } from '../orders/order.mapper';
 import { PaymentsRepository } from './payments.repository';
 
-export interface MockPaymentResult {
-  payment: PaymentResponse;
-  order: OrderResponse;
-}
-
 @Injectable()
 export class PaymentsService {
   constructor(
-    private readonly ordersService: OrdersService,
-    private readonly ordersRepository: OrdersRepository,
     private readonly paymentsRepository: PaymentsRepository,
-    private readonly configs: ConfigsService,
+    private readonly ordersRepository: OrdersRepository,
   ) {}
 
   async mockPay(
-    orderId: number,
+    paymentId: number,
     userId: number,
     outcome: MockPaymentOutcome,
-  ): Promise<MockPaymentResult> {
-    const order = await this.ordersService.requirePayableOrder(orderId, userId);
+  ): Promise<CheckoutResponse> {
+    const payment = await this.paymentsRepository.findById(paymentId);
+    if (!payment) {
+      throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment was not found.');
+    }
+
+    const order = await this.ordersRepository.findById(payment.orderId);
+    if (!order) {
+      throw new NotFoundException('ORDER_NOT_FOUND', 'Order was not found.');
+    }
+    if (order.userId !== userId) {
+      throw new ForbiddenException('PAYMENT_FORBIDDEN', 'You do not own this payment.');
+    }
+
+    if (payment.status !== PaymentStatus.PENDING) {
+      throw new BusinessRuleException(
+        'PAYMENT_ALREADY_FINALIZED',
+        `Payment is already finalized (status: ${payment.status}).`,
+      );
+    }
+
+    if (
+      order.status === OrderStatus.PROCESSING ||
+      order.status === OrderStatus.CANCELLED
+    ) {
+      throw new BusinessRuleException(
+        'ORDER_NOT_PAYABLE',
+        `Order cannot accept payment (status: ${order.status}).`,
+      );
+    }
+
     const paymentRef = `MOCK-${randomUUID()}`;
 
     if (outcome === MockPaymentOutcome.SUCCESS) {
-      const payment = await this.paymentsRepository.create({
-        orderId: order.id,
+      const updatedPayment = await this.paymentsRepository.update(payment.id, {
         status: PaymentStatus.SUCCESS,
-        amount: order.totalAmount,
-        provider: this.configs.PAYMENT_APP.MOCK_PROVIDER,
         paymentRef,
         failureReason: null,
       });
 
       const updatedOrder = await this.ordersRepository.update(order.id, {
-        status: OrderStatus.PAID,
+        status: OrderStatus.PROCESSING,
       });
 
+      // TODO: emit realtime event to admin panel when order enters PROCESSING
+
       return {
-        payment: toPaymentResponse(payment),
+        payment: toPaymentResponse(updatedPayment),
         order: toOrderResponse(updatedOrder),
       };
     }
 
-    const payment = await this.paymentsRepository.create({
-      orderId: order.id,
+    const updatedPayment = await this.paymentsRepository.update(payment.id, {
       status: PaymentStatus.FAILED,
-      amount: order.totalAmount,
-      provider: this.configs.PAYMENT_APP.MOCK_PROVIDER,
       paymentRef,
       failureReason: 'Mock payment failure',
     });
@@ -72,7 +92,7 @@ export class PaymentsService {
     });
 
     return {
-      payment: toPaymentResponse(payment),
+      payment: toPaymentResponse(updatedPayment),
       order: toOrderResponse(updatedOrder),
     };
   }

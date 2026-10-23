@@ -21,6 +21,7 @@ export interface PaymentResponse {
   amount: string;
   provider: string;
   paymentRef: string | null;
+  paymentUrl: string | null;
   failureReason: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +39,11 @@ export interface OrderResponse {
   updatedAt: Date;
 }
 
+export interface CheckoutResponse {
+  order: OrderResponse;
+  payment: PaymentResponse;
+}
+
 export function toPaymentResponse(payment: Payment): PaymentResponse {
   return {
     id: payment.id,
@@ -46,6 +52,7 @@ export function toPaymentResponse(payment: Payment): PaymentResponse {
     amount: payment.amount.toString(),
     provider: payment.provider,
     paymentRef: payment.paymentRef,
+    paymentUrl: payment.paymentUrl,
     failureReason: payment.failureReason,
     createdAt: payment.createdAt,
     updatedAt: payment.updatedAt,

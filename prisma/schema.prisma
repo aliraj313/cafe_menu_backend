@@ -25,8 +25,8 @@ enum OtpPurpose {
 
 enum OrderStatus {
   PENDING_PAYMENT
-  PAID
   PAYMENT_FAILED
+  PROCESSING
   CANCELLED
 }
 
@@ -36,6 +36,7 @@ enum MockPaymentOutcome {
 }
 
 enum PaymentStatus {
+  PENDING
   SUCCESS
   FAILED
 }
@@ -162,10 +163,11 @@ model Payment {
   id             Int           @id @default(autoincrement())
   orderId        Int
   order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  status         PaymentStatus
+  status         PaymentStatus @default(PENDING)
   amount         BigInt
   provider       String
   paymentRef     String?
+  paymentUrl     String?
   failureReason  String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt

@@ -43,6 +43,26 @@ export class OrdersRepository {
     });
   }
 
+  /**
+   * Latest open order for this user+cart that still needs payment.
+   */
+  findOpenForUserCart(userId: number, cartId: number): Promise<OrderWithDetails | null> {
+    return this.prisma.order.findFirst({
+      where: {
+        userId,
+        cartId,
+        status: {
+          in: [OrderStatus.PENDING_PAYMENT, OrderStatus.PAYMENT_FAILED],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+  }
+
   update(id: number, data: Prisma.OrderUpdateInput): Promise<OrderWithDetails> {
     return this.prisma.order.update({
       where: { id },

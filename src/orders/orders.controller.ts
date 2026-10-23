@@ -4,7 +4,7 @@ import {
   AuthenticatedUser,
   CurrentUser,
 } from '../auth/decorators/current-user.decorator';
-import { OrderResponse } from './order.mapper';
+import { CheckoutResponse, OrderResponse } from './order.mapper';
 import { OrdersService } from './orders.service';
 
 @ApiTags('orders')
@@ -14,8 +14,11 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post('carts/checkout')
-  @ApiOperation({ summary: 'Checkout the active cart (requires login)' })
-  checkout(@CurrentUser() user: AuthenticatedUser): Promise<OrderResponse> {
+  @ApiOperation({
+    summary:
+      'Checkout active cart: create order if needed + create PENDING payment (paymentUrl later)',
+  })
+  checkout(@CurrentUser() user: AuthenticatedUser): Promise<CheckoutResponse> {
     return this.ordersService.checkout(user.id);
   }
 

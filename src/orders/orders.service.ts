@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { OrderStatus } from '../generated/prisma/client';
+import { OrderStatus, PaymentStatus } from '../generated/prisma/client';
 import {
   BusinessRuleException,
   ForbiddenException,
   NotFoundException,
 } from '../common/exceptions/app.exception';
+import { ConfigsService } from '../config/configs.service';
 import { CartsService } from '../carts/carts.service';
-import { OrderResponse, toOrderResponse } from './order.mapper';
+import { PaymentsRepository } from '../payments/payments.repository';
+import {
+  CheckoutResponse,
+  OrderResponse,
+  toOrderResponse,
+  toPaymentResponse,
+} from './order.mapper';
 import { OrdersRepository } from './orders.repository';
 
 @Injectable()
@@ -14,9 +21,15 @@ export class OrdersService {
   constructor(
     private readonly ordersRepository: OrdersRepository,
     private readonly cartsService: CartsService,
+    private readonly paymentsRepository: PaymentsRepository,
+    private readonly configs: ConfigsService,
   ) {}
 
-  async checkout(userId: number): Promise<OrderResponse> {
+  /**
+   * Ensures an open order exists for the active cart and always creates a new PENDING payment.
+   * paymentUrl is reserved for the real gateway integration in a later step.
+   */
+  async checkout(userId: number): Promise<CheckoutResponse> {
     const cart = await this.cartsService.requireActiveCartEntity(userId);
 
     if (cart.items.length === 0) {
@@ -45,15 +58,43 @@ export class OrdersService {
       };
     });
 
-    // Cart is intentionally kept so the customer can retry payment on the order.
-    const order = await this.ordersRepository.create({
-      userId,
-      cartId: cart.id,
-      totalAmount,
-      items: orderItems,
+    let order = await this.ordersRepository.findOpenForUserCart(userId, cart.id);
+
+    if (!order) {
+      order = await this.ordersRepository.create({
+        userId,
+        cartId: cart.id,
+        totalAmount,
+        items: orderItems,
+      });
+    } else {
+      // Re-open for a new payment attempt after a previous failure.
+      if (order.status === OrderStatus.PAYMENT_FAILED) {
+        order = await this.ordersRepository.update(order.id, {
+          status: OrderStatus.PENDING_PAYMENT,
+        });
+      }
+    }
+
+    const payment = await this.paymentsRepository.create({
+      orderId: order.id,
+      status: PaymentStatus.PENDING,
+      amount: order.totalAmount,
+      provider: this.configs.PAYMENT_APP.MOCK_PROVIDER,
+      paymentRef: null,
+      paymentUrl: null,
+      failureReason: null,
     });
 
-    return toOrderResponse(order);
+    const refreshed = await this.ordersRepository.findById(order.id);
+    if (!refreshed) {
+      throw new NotFoundException('ORDER_NOT_FOUND', 'Order was not found after checkout.');
+    }
+
+    return {
+      order: toOrderResponse(refreshed),
+      payment: toPaymentResponse(payment),
+    };
   }
 
   async get(orderId: number, userId: number): Promise<OrderResponse> {
@@ -67,22 +108,13 @@ export class OrdersService {
     return toOrderResponse(order);
   }
 
-  /**
-   * Order remains payable while not PAID / CANCELLED (allows multiple payment attempts).
-   */
-  async requirePayableOrder(orderId: number, userId: number) {
+  async requireOwnedOrder(orderId: number, userId: number) {
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {
       throw new NotFoundException('ORDER_NOT_FOUND', 'Order was not found.');
     }
     if (order.userId !== userId) {
       throw new ForbiddenException('ORDER_FORBIDDEN', 'You do not own this order.');
-    }
-    if (order.status === OrderStatus.PAID) {
-      throw new BusinessRuleException('ORDER_ALREADY_PAID', 'Order is already paid.');
-    }
-    if (order.status === OrderStatus.CANCELLED) {
-      throw new BusinessRuleException('ORDER_CANCELLED', 'Order is cancelled and cannot be paid.');
     }
     return order;
   }

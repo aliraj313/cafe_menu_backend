@@ -10,6 +10,17 @@ export class PaymentsRepository {
     return this.prisma.payment.create({ data });
   }
 
+  findById(id: number): Promise<Payment | null> {
+    return this.prisma.payment.findUnique({ where: { id } });
+  }
+
+  update(id: number, data: Prisma.PaymentUpdateInput): Promise<Payment> {
+    return this.prisma.payment.update({
+      where: { id },
+      data,
+    });
+  }
+
   findByOrderId(orderId: number): Promise<Payment[]> {
     return this.prisma.payment.findMany({
       where: { orderId },
