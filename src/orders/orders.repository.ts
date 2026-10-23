@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrderStatus, Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderWithItems } from './order.mapper';
+import { OrderWithDetails } from './order.mapper';
 
 @Injectable()
 export class OrdersRepository {
@@ -18,7 +18,7 @@ export class OrdersRepository {
       quantity: number;
       lineTotal: bigint;
     }>;
-  }): Promise<OrderWithItems> {
+  }): Promise<OrderWithDetails> {
     return this.prisma.order.create({
       data: {
         userId: data.userId,
@@ -29,22 +29,28 @@ export class OrdersRepository {
           create: data.items,
         },
       },
-      include: { items: true },
+      include: { items: true, payments: { orderBy: { createdAt: 'asc' } } },
     });
   }
 
-  findById(id: number): Promise<OrderWithItems | null> {
+  findById(id: number): Promise<OrderWithDetails | null> {
     return this.prisma.order.findUnique({
       where: { id },
-      include: { items: true },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
     });
   }
 
-  updateStatus(id: number, data: Prisma.OrderUpdateInput): Promise<OrderWithItems> {
+  update(id: number, data: Prisma.OrderUpdateInput): Promise<OrderWithDetails> {
     return this.prisma.order.update({
       where: { id },
       data,
-      include: { items: true },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
     });
   }
 }

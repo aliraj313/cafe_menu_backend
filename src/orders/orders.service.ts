@@ -5,7 +5,6 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '../common/exceptions/app.exception';
-import { CartsRepository } from '../carts/carts.repository';
 import { CartsService } from '../carts/carts.service';
 import { OrderResponse, toOrderResponse } from './order.mapper';
 import { OrdersRepository } from './orders.repository';
@@ -15,7 +14,6 @@ export class OrdersService {
   constructor(
     private readonly ordersRepository: OrdersRepository,
     private readonly cartsService: CartsService,
-    private readonly cartsRepository: CartsRepository,
   ) {}
 
   async checkout(userId: number): Promise<OrderResponse> {
@@ -47,14 +45,13 @@ export class OrdersService {
       };
     });
 
+    // Cart is intentionally kept so the customer can retry payment on the order.
     const order = await this.ordersRepository.create({
       userId,
       cartId: cart.id,
       totalAmount,
       items: orderItems,
     });
-
-    await this.cartsRepository.clearItems(cart.id);
 
     return toOrderResponse(order);
   }
@@ -70,7 +67,10 @@ export class OrdersService {
     return toOrderResponse(order);
   }
 
-  async requirePendingOrder(orderId: number, userId: number) {
+  /**
+   * Order remains payable while not PAID / CANCELLED (allows multiple payment attempts).
+   */
+  async requirePayableOrder(orderId: number, userId: number) {
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {
       throw new NotFoundException('ORDER_NOT_FOUND', 'Order was not found.');
@@ -78,11 +78,11 @@ export class OrdersService {
     if (order.userId !== userId) {
       throw new ForbiddenException('ORDER_FORBIDDEN', 'You do not own this order.');
     }
-    if (order.status !== OrderStatus.PENDING_PAYMENT) {
-      throw new BusinessRuleException(
-        'ORDER_NOT_PAYABLE',
-        `Order is not awaiting payment (current status: ${order.status}).`,
-      );
+    if (order.status === OrderStatus.PAID) {
+      throw new BusinessRuleException('ORDER_ALREADY_PAID', 'Order is already paid.');
+    }
+    if (order.status === OrderStatus.CANCELLED) {
+      throw new BusinessRuleException('ORDER_CANCELLED', 'Order is cancelled and cannot be paid.');
     }
     return order;
   }

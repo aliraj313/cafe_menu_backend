@@ -35,6 +35,11 @@ enum MockPaymentOutcome {
   FAILURE
 }
 
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
 model User {
   id           Int            @id @default(autoincrement())
   mobile       String         @unique
@@ -136,24 +141,37 @@ model CartItem {
 }
 
 model Order {
-  id            Int         @id @default(autoincrement())
-  userId        Int
-  user          User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  cartId        Int?
-  cart          Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
-  status        OrderStatus @default(PENDING_PAYMENT)
-  totalAmount   BigInt
-  items         OrderItem[]
-  paymentRef    String?
-  paidAt        DateTime?
-  failedAt      DateTime?
-  failureReason String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  cartId      Int?
+  cart        Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  status      OrderStatus @default(PENDING_PAYMENT)
+  totalAmount BigInt
+  items       OrderItem[]
+  payments    Payment[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([status])
   @@index([cartId])
   @@index([userId])
+}
+
+model Payment {
+  id             Int           @id @default(autoincrement())
+  orderId        Int
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status         PaymentStatus
+  amount         BigInt
+  provider       String
+  paymentRef     String?
+  failureReason  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([status])
 }
 
 model OrderItem {

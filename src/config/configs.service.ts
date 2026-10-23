@@ -72,7 +72,12 @@ export class ConfigsService {
   };
 
 
-  /** Shared business / API limits used across modules. */
+  /** Payment-related application constants. */
+  readonly PAYMENT_APP = {
+    MOCK_PROVIDER: 'mock',
+  };
+
+    /** Shared business / API limits used across modules. */
   readonly LIMITS = {
     PAGINATION: {
       DEFAULT_PAGE: 1,

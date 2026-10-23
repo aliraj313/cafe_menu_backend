@@ -1,44 +1,79 @@
 import { Injectable } from '@nestjs/common';
-import { MockPaymentOutcome, OrderStatus } from '../generated/prisma/client';
+import {
+  MockPaymentOutcome,
+  OrderStatus,
+  PaymentStatus,
+} from '../generated/prisma/client';
 import { randomUUID } from 'crypto';
+import { ConfigsService } from '../config/configs.service';
 import { OrdersRepository } from '../orders/orders.repository';
 import { OrdersService } from '../orders/orders.service';
-import { OrderResponse, toOrderResponse } from '../orders/order.mapper';
+import {
+  OrderResponse,
+  PaymentResponse,
+  toOrderResponse,
+  toPaymentResponse,
+} from '../orders/order.mapper';
+import { PaymentsRepository } from './payments.repository';
+
+export interface MockPaymentResult {
+  payment: PaymentResponse;
+  order: OrderResponse;
+}
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly ordersRepository: OrdersRepository,
+    private readonly paymentsRepository: PaymentsRepository,
+    private readonly configs: ConfigsService,
   ) {}
 
   async mockPay(
     orderId: number,
     userId: number,
     outcome: MockPaymentOutcome,
-  ): Promise<OrderResponse> {
-    await this.ordersService.requirePendingOrder(orderId, userId);
-
+  ): Promise<MockPaymentResult> {
+    const order = await this.ordersService.requirePayableOrder(orderId, userId);
     const paymentRef = `MOCK-${randomUUID()}`;
-    const now = new Date();
 
     if (outcome === MockPaymentOutcome.SUCCESS) {
-      const order = await this.ordersRepository.updateStatus(orderId, {
-        status: OrderStatus.PAID,
+      const payment = await this.paymentsRepository.create({
+        orderId: order.id,
+        status: PaymentStatus.SUCCESS,
+        amount: order.totalAmount,
+        provider: this.configs.PAYMENT_APP.MOCK_PROVIDER,
         paymentRef,
-        paidAt: now,
-        failedAt: null,
         failureReason: null,
       });
-      return toOrderResponse(order);
+
+      const updatedOrder = await this.ordersRepository.update(order.id, {
+        status: OrderStatus.PAID,
+      });
+
+      return {
+        payment: toPaymentResponse(payment),
+        order: toOrderResponse(updatedOrder),
+      };
     }
 
-    const order = await this.ordersRepository.updateStatus(orderId, {
-      status: OrderStatus.PAYMENT_FAILED,
+    const payment = await this.paymentsRepository.create({
+      orderId: order.id,
+      status: PaymentStatus.FAILED,
+      amount: order.totalAmount,
+      provider: this.configs.PAYMENT_APP.MOCK_PROVIDER,
       paymentRef,
-      failedAt: now,
       failureReason: 'Mock payment failure',
     });
-    return toOrderResponse(order);
+
+    const updatedOrder = await this.ordersRepository.update(order.id, {
+      status: OrderStatus.PAYMENT_FAILED,
+    });
+
+    return {
+      payment: toPaymentResponse(payment),
+      order: toOrderResponse(updatedOrder),
+    };
   }
 }
