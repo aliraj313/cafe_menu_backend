@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsOptional,
   IsString,
   IsUrl,
@@ -75,4 +76,12 @@ export class UpdateSettingsDto {
   @MinLength(1)
   @MaxLength(128)
   zarinpalMerchant?: string | null;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the cafe/restaurant is currently open for orders',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isOpen?: boolean;
 }

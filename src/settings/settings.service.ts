@@ -46,6 +46,7 @@ export class SettingsService {
       ...(dto.instagramUrl !== undefined ? { instagramUrl: dto.instagramUrl } : {}),
       ...(dto.telegramUrl !== undefined ? { telegramUrl: dto.telegramUrl } : {}),
       ...(dto.zarinpalMerchant !== undefined ? { zarinpalMerchant: dto.zarinpalMerchant } : {}),
+      ...(dto.isOpen !== undefined ? { isOpen: dto.isOpen } : {}),
     };
 
     const updated = await this.settingsRepository.update(

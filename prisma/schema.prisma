@@ -205,6 +205,7 @@ model Settings {
   instagramUrl     String?
   telegramUrl      String?
   zarinpalMerchant String?
+  isOpen           Boolean  @default(true)
   theme            Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
