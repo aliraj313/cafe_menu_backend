@@ -87,7 +87,7 @@ export class OrdersService {
       userId,
       cartId: order.cartId,
       amount: order.totalAmount.toString(),
-      currency: this.configs.PAYMENT_APP.CURRENCY_IRR,
+      currency: this.configs.PAYMENT_APP.CURRENCY_IRT,
       description,
       items: order.items.map((item) => ({
         productId: item.productId,
@@ -103,7 +103,7 @@ export class OrdersService {
       amount: amountNumber,
       callback_url: callbackUrl,
       description,
-      currency: this.configs.PAYMENT_APP.CURRENCY_IRR,
+      currency: this.configs.PAYMENT_APP.CURRENCY_IRT,
       metadata: {
         mobile: user?.mobile,
         order_id: String(order.id),

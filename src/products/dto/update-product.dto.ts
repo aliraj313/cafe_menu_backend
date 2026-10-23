@@ -33,13 +33,13 @@ export class UpdateProductDto {
   description?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Price in Rial as integer string (no decimals)',
+    description: 'Price in Toman as integer string (no decimals)',
     example: '200000',
   })
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\d+$/, { message: 'price must be a non-negative integer string in Rial' })
+  @Matches(/^\d+$/, { message: 'price must be a non-negative integer string in Toman' })
   price?: string;
 
   @ApiPropertyOptional({ type: [String] })

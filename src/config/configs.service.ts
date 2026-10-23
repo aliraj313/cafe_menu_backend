@@ -84,7 +84,7 @@ export class ConfigsService {
   /** Payment-related application constants (no hardcoding elsewhere). */
   readonly PAYMENT_APP = {
     PROVIDER_ZARINPAL: 'zarinpal',
-    CURRENCY_IRR: 'IRR',
+    CURRENCY_IRT: 'IRT',
     SNAPSHOT_TYPE_ORDER: 'ORDER',
     ZARINPAL: {
       REQUEST_PATH: '/pg/v4/payment/request.json',
