@@ -11,6 +11,7 @@ export class OrdersRepository {
     userId: number;
     cartId: number;
     totalAmount: bigint;
+    tableNumber?: number | null;
     items: Array<{
       productId: number;
       productName: string;
@@ -23,6 +24,7 @@ export class OrdersRepository {
       data: {
         userId: data.userId,
         cartId: data.cartId,
+        tableNumber: data.tableNumber ?? null,
         totalAmount: data.totalAmount,
         status: OrderStatus.PENDING_PAYMENT,
         items: {

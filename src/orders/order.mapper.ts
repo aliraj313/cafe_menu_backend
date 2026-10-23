@@ -33,6 +33,7 @@ export interface OrderResponse {
   id: number;
   userId: number;
   cartId: number | null;
+  tableNumber: number | null;
   status: OrderStatus;
   totalAmount: string;
   items: OrderItemResponse[];
@@ -77,6 +78,7 @@ export function toOrderResponse(order: OrderWithDetails): OrderResponse {
     id: order.id,
     userId: order.userId,
     cartId: order.cartId,
+    tableNumber: order.tableNumber,
     status: order.status,
     totalAmount: order.totalAmount.toString(),
     items: order.items.map((item) => ({

@@ -32,7 +32,7 @@ export class OrdersService {
     private readonly configs: ConfigsService,
   ) {}
 
-  async checkout(userId: number): Promise<CheckoutResponse> {
+  async checkout(userId: number, tableNumber?: number | null): Promise<CheckoutResponse> {
     const cart = await this.cartsService.requireActiveCartEntity(userId);
 
     if (cart.items.length === 0) {
@@ -68,7 +68,12 @@ export class OrdersService {
         userId,
         cartId: cart.id,
         totalAmount,
+        tableNumber: tableNumber ?? null,
         items: orderItems,
+      });
+    } else if (tableNumber !== undefined) {
+      order = await this.ordersRepository.update(order.id, {
+        tableNumber: tableNumber,
       });
     }
 

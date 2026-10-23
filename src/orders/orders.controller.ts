@@ -1,9 +1,10 @@
-import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   AuthenticatedUser,
   CurrentUser,
 } from '../auth/decorators/current-user.decorator';
+import { CheckoutDto } from './dto/checkout.dto';
 import { CheckoutResponse, OrderResponse } from './order.mapper';
 import { OrdersService } from './orders.service';
 
@@ -16,10 +17,13 @@ export class OrdersController {
   @Post('carts/checkout')
   @ApiOperation({
     summary:
-      'Checkout active cart: create order if needed + create PENDING payment (paymentUrl later)',
+      'Checkout active cart: create order if needed + PENDING payment (optional tableNumber)',
   })
-  checkout(@CurrentUser() user: AuthenticatedUser): Promise<CheckoutResponse> {
-    return this.ordersService.checkout(user.id);
+  checkout(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CheckoutDto,
+  ): Promise<CheckoutResponse> {
+    return this.ordersService.checkout(user.id, dto.tableNumber);
   }
 
   @Get('orders/:id')
