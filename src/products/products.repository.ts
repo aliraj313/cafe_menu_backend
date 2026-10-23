@@ -35,6 +35,13 @@ export class ProductsRepository {
     });
   }
 
+  findAllWithCategory(): Promise<ProductWithCategory[]> {
+    return this.prisma.product.findMany({
+      orderBy: [{ categoryId: 'asc' }, { createdAt: 'desc' }],
+      include: { category: true },
+    });
+  }
+
   count(where: Prisma.ProductWhereInput): Promise<number> {
     return this.prisma.product.count({ where });
   }

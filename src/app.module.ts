@@ -8,6 +8,7 @@ import { CartsModule } from './carts/carts.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ConfigsModule } from './config/configs.module';
 import { HealthModule } from './health/health.module';
+import { MenuModule } from './menu/menu.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -27,6 +28,7 @@ import { SettingsModule } from './settings/settings.module';
     CategoriesModule,
     ProductsModule,
     SettingsModule,
+    MenuModule,
     CartsModule,
     OrdersModule,
     PaymentsModule,
