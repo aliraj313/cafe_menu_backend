@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OrderStatus, PaymentStatus } from '../generated/prisma/client';
+import { PaymentStatus } from '../generated/prisma/client';
 import {
   BusinessRuleException,
   ForbiddenException,
