@@ -12,12 +12,12 @@ const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['mock', 'zarinpal'];
 export class ConfigsService {
   readonly NODE_ENV: NodeEnv;
   readonly PORT: number;
-  readonly API_PREFIX: string;
   readonly DATABASE_URL: string;
-  readonly BUSINESS_TIMEZONE: string;
   readonly FRONTEND_ORIGIN: string;
   readonly PUBLIC_MENU_BASE_URL: string;
-  readonly UPLOAD_MAX_BYTES: number;
+
+  /** Fixed business timezone (not env-driven). */
+  readonly BUSINESS_TIMEZONE = 'Asia/Tehran' as const;
 
   readonly JWT: {
     readonly ACCESS: {
@@ -35,12 +35,13 @@ export class ConfigsService {
     readonly PASSWORD: string;
   };
 
-  readonly OTP: {
-    readonly TTL_SECONDS: number;
-    readonly RESEND_COOLDOWN_SECONDS: number;
-    readonly MAX_ATTEMPTS: number;
-    readonly PEPPER: string;
-  };
+  /** OTP policy constants (not env-driven). */
+  readonly OTP = {
+    TTL_SECONDS: 300,
+    RESEND_COOLDOWN_SECONDS: 60,
+    MAX_ATTEMPTS: 5,
+    PEPPER: 'cafe-menu-otp-pepper-v1',
+  } as const;
 
   readonly SMS: {
     readonly PROVIDER: SmsProvider;
@@ -120,17 +121,9 @@ export class ConfigsService {
       DEFAULT_LIMIT: 20,
       MAX_LIMIT: 100,
     },
-    UPLOAD: {
-      MIN_BYTES: 1024,
-    },
     PORT: {
       MIN: 1,
       MAX: 65_535,
-    },
-    OTP: {
-      MIN_TTL_SECONDS: 60,
-      MIN_RESEND_COOLDOWN_SECONDS: 10,
-      MIN_MAX_ATTEMPTS: 1,
     },
     AUTH: {
       BCRYPT_SALT_ROUNDS: 12,
@@ -152,21 +145,18 @@ export class ConfigsService {
   constructor(private readonly configService: ConfigService) {
     this.NODE_ENV = this.parseNodeEnv(this.requireString('NODE_ENV'));
     this.PORT = this.parsePort(this.requireString('PORT'));
-    this.API_PREFIX = this.requireNonEmptyString('API_PREFIX');
     this.DATABASE_URL = this.requireNonEmptyString('DATABASE_URL');
-    this.BUSINESS_TIMEZONE = this.requireNonEmptyString('BUSINESS_TIMEZONE');
     this.FRONTEND_ORIGIN = this.requireNonEmptyString('FRONTEND_ORIGIN');
     this.PUBLIC_MENU_BASE_URL = this.requireNonEmptyString('PUBLIC_MENU_BASE_URL');
-    this.UPLOAD_MAX_BYTES = this.parseUploadMaxBytes(this.requireString('UPLOAD_MAX_BYTES'));
 
     this.JWT = {
       ACCESS: {
         SECRET: this.requireNonEmptyString('JWT_ACCESS_SECRET'),
-        TTL: this.requireNonEmptyString('JWT_ACCESS_TTL'),
+        TTL: '1d',
       },
       REFRESH: {
         SECRET: this.requireNonEmptyString('JWT_REFRESH_SECRET'),
-        TTL: this.requireNonEmptyString('JWT_REFRESH_TTL'),
+        TTL: '365d',
       },
     };
 
@@ -180,24 +170,6 @@ export class ConfigsService {
       );
     }
 
-    this.OTP = {
-      TTL_SECONDS: this.parseIntInRange(
-        'OTP_TTL_SECONDS',
-        this.LIMITS.OTP.MIN_TTL_SECONDS,
-        Number.MAX_SAFE_INTEGER,
-      ),
-      RESEND_COOLDOWN_SECONDS: this.parseIntInRange(
-        'OTP_RESEND_COOLDOWN_SECONDS',
-        this.LIMITS.OTP.MIN_RESEND_COOLDOWN_SECONDS,
-        Number.MAX_SAFE_INTEGER,
-      ),
-      MAX_ATTEMPTS: this.parseIntInRange(
-        'OTP_MAX_ATTEMPTS',
-        this.LIMITS.OTP.MIN_MAX_ATTEMPTS,
-        Number.MAX_SAFE_INTEGER,
-      ),
-      PEPPER: this.requireNonEmptyString('OTP_PEPPER'),
-    };
 
     // Production always uses SMS.ir; non-production always uses mock (no SMS_PROVIDER env).
     this.SMS = {
@@ -270,17 +242,6 @@ export class ConfigsService {
     return normalized.length === 0 ? undefined : normalized;
   }
 
-  private parseIntInRange(key: string, min: number, max: number): number {
-    const raw = this.requireString(key);
-    const parsed = Number(raw);
-    if (!Number.isInteger(parsed)) {
-      throw new Error(`Environment variable ${key} must be an integer`);
-    }
-    if (parsed < min || parsed > max) {
-      throw new Error(`Environment variable ${key} must be between ${min} and ${max}`);
-    }
-    return parsed;
-  }
 
   private parsePort(raw: string): number {
     const parsed = Number(raw);
@@ -295,18 +256,6 @@ export class ConfigsService {
     return parsed;
   }
 
-  private parseUploadMaxBytes(raw: string): number {
-    const parsed = Number(raw);
-    if (!Number.isInteger(parsed)) {
-      throw new Error('Environment variable UPLOAD_MAX_BYTES must be an integer');
-    }
-    if (parsed < this.LIMITS.UPLOAD.MIN_BYTES) {
-      throw new Error(
-        `Environment variable UPLOAD_MAX_BYTES must be at least ${this.LIMITS.UPLOAD.MIN_BYTES}`,
-      );
-    }
-    return parsed;
-  }
 
   private parseNodeEnv(raw: string): NodeEnv {
     if (!NODE_ENVS.includes(raw as NodeEnv)) {

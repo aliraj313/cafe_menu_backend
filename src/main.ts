@@ -11,9 +11,9 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const configs = app.get(ConfigsService);
 
-  // API_PREFIX already includes the version segment (e.g. api/v1).
-  // Do not enable URI versioning on top of that, or routes become /api/v1/v1/...
-  app.setGlobalPrefix(configs.API_PREFIX, {
+  // Fixed API prefix (not env-driven). Do not stack URI versioning on top.
+  const apiPrefix = 'api/v1';
+  app.setGlobalPrefix(apiPrefix, {
     exclude: [...configs.APP.DOCS_EXCLUDE_ROUTES],
   });
 
@@ -63,7 +63,7 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(configs.PORT);
   // eslint-disable-next-line no-console
-  console.log(`Server running on http://localhost:${configs.PORT}/${configs.API_PREFIX}`);
+  console.log(`Server running on http://localhost:${configs.PORT}/${apiPrefix}`);
   if (configs.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
     console.log(`API docs (Scalar): http://localhost:${configs.PORT}/${configs.APP.DOCS_PATH}`);
