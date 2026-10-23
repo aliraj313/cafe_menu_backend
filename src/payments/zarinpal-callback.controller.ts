@@ -1,23 +1,20 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeController } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 import { PaymentsService } from './payments.service';
 
 /**
- * Public Zarinpal browser callback (no JWT).
+ * Public Zarinpal browser callback (no JWT). Hidden from OpenAPI / Scalar docs.
  * Full path: /{API_PREFIX}/payments/zarinpal/callback
  */
-@ApiTags('payments')
+@ApiExcludeController()
 @Public()
 @Controller('payments/zarinpal')
 export class ZarinpalCallbackController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Get('callback')
-  @ApiOperation({
-    summary: 'Zarinpal callback — server-side verify then redirect to frontend',
-  })
   async callback(
     @Query('Authority') authority: string,
     @Query('Status') status: string,
