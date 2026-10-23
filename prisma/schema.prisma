@@ -17,6 +17,18 @@ enum UserRole {
   ADMIN
 }
 
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PAYMENT_FAILED
+  CANCELLED
+}
+
+enum MockPaymentOutcome {
+  SUCCESS
+  FAILURE
+}
+
 model User {
   id                Int                @id @default(autoincrement())
   mobile            String             @unique
@@ -65,36 +77,91 @@ model Category {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   description String?
   price       BigInt
-  images      String[] @default([])
+  images      String[]   @default([])
   mealType    MealType
-  isAvailable Boolean  @default(true)
+  isAvailable Boolean    @default(true)
   categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cartItems   CartItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([categoryId])
   @@index([mealType])
   @@index([isAvailable])
 }
 
+model Cart {
+  id        Int        @id @default(autoincrement())
+  items     CartItem[]
+  orders    Order[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id             Int         @id @default(autoincrement())
+  cartId         Int?
+  cart           Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  status         OrderStatus @default(PENDING_PAYMENT)
+  totalAmount    BigInt
+  items          OrderItem[]
+  paymentRef     String?
+  paidAt         DateTime?
+  failedAt       DateTime?
+  failureReason  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([status])
+  @@index([cartId])
+}
+
+model OrderItem {
+  id          Int    @id @default(autoincrement())
+  orderId     Int
+  order       Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   Int
+  productName String
+  unitPrice   BigInt
+  quantity    Int
+  lineTotal   BigInt
+
+  @@index([orderId])
+}
+
 model Settings {
-  id                       Int      @id @default(autoincrement())
-  cafeName                 String
-  slogan                   String?
-  logoUrl                  String?
-  description              String?
-  phone                    String?
-  workingHours             String?
-  address                  String?
-  instagramUrl             String?
-  telegramUrl              String?
-  zarinpalMerchant         String?
-  theme                    Json?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  cafeName         String
+  slogan           String?
+  logoUrl          String?
+  description      String?
+  phone            String?
+  workingHours     String?
+  address          String?
+  instagramUrl     String?
+  telegramUrl      String?
+  zarinpalMerchant String?
+  theme            Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

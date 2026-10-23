@@ -96,6 +96,11 @@ export class ConfigsService {
       MIN_PASSWORD_LENGTH: 8,
       OTP_LENGTH: 6,
     },
+    CART: {
+      MIN_QUANTITY: 1,
+      MAX_QUANTITY: 99,
+      MAX_ITEMS: 50,
+    },
   };
 
   constructor(private readonly configService: ConfigService) {
