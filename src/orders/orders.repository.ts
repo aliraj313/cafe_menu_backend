@@ -104,4 +104,25 @@ export class OrdersRepository {
     });
     return result._sum.totalAmount ?? 0n;
   }
+
+  findMany(params: {
+    skip: number;
+    take: number;
+    where: Prisma.OrderWhereInput;
+  }): Promise<OrderWithDetails[]> {
+    return this.prisma.order.findMany({
+      skip: params.skip,
+      take: params.take,
+      where: params.where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+        payments: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+  }
+
+  count(where: Prisma.OrderWhereInput): Promise<number> {
+    return this.prisma.order.count({ where });
+  }
 }

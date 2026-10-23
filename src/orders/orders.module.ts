@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module';
 import { CartsModule } from '../carts/carts.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { SettingsModule } from '../settings/settings.module';
+import { AdminOrdersController } from './admin-orders.controller';
 import { OrdersController } from './orders.controller';
 import { OrdersRepository } from './orders.repository';
 import { OrdersService } from './orders.service';
@@ -14,7 +15,7 @@ import { OrdersService } from './orders.service';
     SettingsModule,
     AuthModule,
   ],
-  controllers: [OrdersController],
+  controllers: [OrdersController, AdminOrdersController],
   providers: [OrdersService, OrdersRepository],
   exports: [OrdersService, OrdersRepository],
 })
