@@ -10,6 +10,7 @@ import { CartsService } from '../carts/carts.service';
 import { PaymentsRepository } from '../payments/payments.repository';
 import { ZarinpalService } from '../payments/zarinpal/zarinpal.service';
 import { PaymentSnapshot } from '../payments/zarinpal/zarinpal.types';
+import { OrderingAvailabilityService } from '../settings/ordering-availability.service';
 import { SettingsRepository } from '../settings/settings.repository';
 import { UsersRepository } from '../auth/users.repository';
 import {
@@ -30,9 +31,11 @@ export class OrdersService {
     private readonly settingsRepository: SettingsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly configs: ConfigsService,
+    private readonly orderingAvailability: OrderingAvailabilityService,
   ) {}
 
   async checkout(userId: number, tableNumber?: number | null): Promise<CheckoutResponse> {
+    await this.orderingAvailability.assertOrderingEnabled();
     const cart = await this.cartsService.requireActiveCartEntity(userId);
 
     if (cart.items.length === 0) {

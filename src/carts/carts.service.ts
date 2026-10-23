@@ -5,6 +5,7 @@ import {
 } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
 import { ProductsRepository } from '../products/products.repository';
+import { OrderingAvailabilityService } from '../settings/ordering-availability.service';
 import { CartResponse, CartWithItems, toCartResponse } from './cart.mapper';
 import { CartsRepository } from './carts.repository';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
@@ -16,6 +17,7 @@ export class CartsService {
     private readonly cartsRepository: CartsRepository,
     private readonly productsRepository: ProductsRepository,
     private readonly configs: ConfigsService,
+    private readonly orderingAvailability: OrderingAvailabilityService,
   ) {}
 
   /**
@@ -42,6 +44,7 @@ export class CartsService {
   }
 
   async addItem(userId: number, dto: AddCartItemDto): Promise<CartResponse> {
+    await this.orderingAvailability.assertOrderingEnabled();
     this.assertQuantity(dto.quantity);
 
     const product = await this.productsRepository.findById(dto.productId);
