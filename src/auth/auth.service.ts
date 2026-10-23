@@ -76,9 +76,10 @@ export class AuthService {
       expiresAt,
     });
 
-    await this.smsService.send({
+    await this.smsService.sendOtp({
       to: mobile,
-      text: `Cafe Menu login code: ${otp}`,
+      code: otp,
+      purpose: 'LOGIN',
     });
 
     return {
@@ -203,9 +204,10 @@ export class AuthService {
       expiresAt,
     });
 
-    await this.smsService.send({
+    await this.smsService.sendOtp({
       to: user.mobile,
-      text: `Cafe Menu password reset code: ${otp}`,
+      code: otp,
+      purpose: 'PASSWORD_RESET',
     });
 
     return { ...generic, ...(!isProduction() && { otp }) };

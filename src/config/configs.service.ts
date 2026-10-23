@@ -3,9 +3,11 @@ import { ConfigService } from '@nestjs/config';
 
 export type NodeEnv = 'development' | 'test' | 'production';
 export type PaymentProvider = 'mock' | 'zarinpal';
+export type SmsProvider = 'mock' | 'smsir';
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
 const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['mock', 'zarinpal'];
+const SMS_PROVIDERS: readonly SmsProvider[] = ['mock', 'smsir'];
 
 @Injectable()
 export class ConfigsService {
@@ -40,6 +42,16 @@ export class ConfigsService {
     readonly MAX_ATTEMPTS: number;
     readonly PEPPER: string;
     readonly DEMO_ENABLED: boolean;
+  };
+
+  readonly SMS: {
+    readonly PROVIDER: SmsProvider;
+    readonly SMSIR: {
+      readonly API_KEY: string | undefined;
+      readonly API_BASE_URL: string;
+      readonly OTP_TEMPLATE_ID: number | undefined;
+      readonly OTP_PARAM_NAME: string;
+    };
   };
 
   readonly PAYMENT: {
@@ -78,6 +90,12 @@ export class ConfigsService {
     EVENTS: {
       ORDER_PAID: 'order.paid',
     },
+  };
+
+  readonly SMS_APP = {
+    DEFAULT_API_BASE_URL: 'https://api.sms.ir/v1',
+    VERIFY_PATH: '/send/verify',
+    DEFAULT_OTP_PARAM_NAME: 'Code',
   };
 
   /** Payment-related application constants (no hardcoding elsewhere). */
@@ -184,6 +202,20 @@ export class ConfigsService {
       DEMO_ENABLED: this.requireBoolean('AUTH_DEMO_OTP_ENABLED'),
     };
 
+    this.SMS = {
+      PROVIDER: this.parseSmsProvider(this.requireString('SMS_PROVIDER')),
+      SMSIR: {
+        API_KEY: this.optionalNonEmptyString('SMS_IR_API_KEY'),
+        API_BASE_URL: (
+          this.optionalUrl('SMS_IR_API_BASE_URL') ?? this.SMS_APP.DEFAULT_API_BASE_URL
+        ).replace(/\/$/, ''),
+        OTP_TEMPLATE_ID: this.optionalPositiveInt('SMS_IR_OTP_TEMPLATE_ID'),
+        OTP_PARAM_NAME:
+          this.optionalNonEmptyString('SMS_IR_OTP_PARAM_NAME') ??
+          this.SMS_APP.DEFAULT_OTP_PARAM_NAME,
+      },
+    };
+
     this.PAYMENT = {
       PROVIDER: this.parsePaymentProvider(this.requireString('PAYMENT_PROVIDER')),
       MOCK_ENABLED: this.requireBoolean('PAYMENT_MOCK_ENABLED'),
@@ -208,6 +240,16 @@ export class ConfigsService {
     }
     if (!this.PAYMENT.ZARINPAL.CALLBACK_URL) {
       throw new Error('ZARINPAL_CALLBACK_URL is required in production');
+    }
+    if (this.SMS.PROVIDER === 'smsir') {
+      if (!this.SMS.SMSIR.API_KEY) {
+        throw new Error('SMS_IR_API_KEY is required when SMS_PROVIDER=smsir in production');
+      }
+      if (!this.SMS.SMSIR.OTP_TEMPLATE_ID) {
+        throw new Error(
+          'SMS_IR_OTP_TEMPLATE_ID is required when SMS_PROVIDER=smsir in production',
+        );
+      }
     }
   }
 
@@ -306,6 +348,27 @@ export class ConfigsService {
       );
     }
     return raw as PaymentProvider;
+  }
+
+  private parseSmsProvider(raw: string): SmsProvider {
+    if (!SMS_PROVIDERS.includes(raw as SmsProvider)) {
+      throw new Error(
+        `Environment variable SMS_PROVIDER must be one of: ${SMS_PROVIDERS.join(', ')}`,
+      );
+    }
+    return raw as SmsProvider;
+  }
+
+  private optionalPositiveInt(key: string): number | undefined {
+    const value = this.optionalNonEmptyString(key);
+    if (value === undefined) {
+      return undefined;
+    }
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new Error(`Environment variable ${key} must be a positive integer`);
+    }
+    return parsed;
   }
 
   private parseMobile(raw: string): string {
