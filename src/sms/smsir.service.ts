@@ -36,7 +36,8 @@ export class SmsIrService implements SmsService {
       );
     }
 
-    const url = `${this.configs.SMS.SMSIR.API_BASE_URL}${this.configs.SMS_APP.VERIFY_PATH}`;
+    const baseUrl = this.configs.SMS_APP.DEFAULT_API_BASE_URL.replace(/\/$/, '');
+    const url = `${baseUrl}${this.configs.SMS_APP.VERIFY_PATH}`;
     const mobile = this.normalizeMobile(message.to);
     const body = {
       mobile,

@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { createHash, randomInt } from 'crypto';
 import { OtpPurpose, UserRole } from '../generated/prisma/client';
 import { BusinessRuleException, UnauthorizedException } from '../common/exceptions/app.exception';
-import { ConfigsService, isProduction } from '../config/configs.service';
+import { ConfigsService } from '../config/configs.service';
 import { SMS_SERVICE, SmsService } from '../sms/sms.service';
 import { AuthTokensResponse, ForgotPasswordResponse } from './auth.types';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -84,7 +84,7 @@ export class AuthService {
 
     return {
       message: 'OTP has been sent.',
-      ...(!isProduction() && { otp }),
+      ...(this.configs.NODE_ENV !== 'production' ? { otp } : {}),
       resendAvailableInSeconds: this.configs.OTP.RESEND_COOLDOWN_SECONDS,
     };
   }
@@ -210,7 +210,10 @@ export class AuthService {
       purpose: 'PASSWORD_RESET',
     });
 
-    return { ...generic, ...(!isProduction() && { otp }) };
+    return {
+      ...generic,
+      ...(this.configs.NODE_ENV !== 'production' ? { otp } : {}),
+    };
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
