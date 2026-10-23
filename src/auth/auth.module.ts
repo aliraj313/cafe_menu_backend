@@ -27,6 +27,6 @@ import { UsersRepository } from './users.repository';
     JwtAccessStrategy,
     JwtAuthGuard,
   ],
-  exports: [AuthService, JwtAuthGuard, PassportModule],
+  exports: [AuthService, JwtAuthGuard, PassportModule, UsersRepository, JwtModule],
 })
 export class AuthModule {}

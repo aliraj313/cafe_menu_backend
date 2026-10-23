@@ -72,6 +72,15 @@ export class ConfigsService {
   };
 
 
+  /** WebSocket (admin realtime) constants. */
+  readonly WS = {
+    NAMESPACE: 'admin',
+    ROOM_ADMINS: 'admins',
+    EVENTS: {
+      ORDER_PAID: 'order.paid',
+    },
+  };
+
   /** Payment-related application constants. */
   readonly PAYMENT_APP = {
     MOCK_PROVIDER: 'mock',

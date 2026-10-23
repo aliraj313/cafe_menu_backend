@@ -12,6 +12,7 @@ import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { SettingsModule } from './settings/settings.module';
 
 @Module({
@@ -29,6 +30,7 @@ import { SettingsModule } from './settings/settings.module';
     CartsModule,
     OrdersModule,
     PaymentsModule,
+    RealtimeModule,
   ],
   providers: [
     {

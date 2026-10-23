@@ -17,6 +17,7 @@ import {
   toOrderResponse,
   toPaymentResponse,
 } from '../orders/order.mapper';
+import { AdminOrdersGateway } from '../realtime/admin-orders.gateway';
 import { PaymentsRepository } from './payments.repository';
 
 @Injectable()
@@ -25,6 +26,7 @@ export class PaymentsService {
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersRepository: OrdersRepository,
     private readonly cartsRepository: CartsRepository,
+    private readonly adminOrdersGateway: AdminOrdersGateway,
   ) {}
 
   async mockPay(
@@ -75,21 +77,20 @@ export class PaymentsService {
         status: OrderStatus.PROCESSING,
       });
 
-      // Empty cart items but keep the row; expire so next order uses a new cart.
       if (order.cartId !== null) {
         await this.cartsRepository.clearItems(order.cartId);
         await this.cartsRepository.expireCart(order.cartId, new Date());
       }
 
-      // TODO: emit realtime event to admin panel when order enters PROCESSING
+      const orderPayload = toOrderResponse(updatedOrder);
+      this.adminOrdersGateway.emitOrderPaid(orderPayload);
 
       return {
         payment: toPaymentResponse(updatedPayment),
-        order: toOrderResponse(updatedOrder),
+        order: orderPayload,
       };
     }
 
-    // Failure: keep cart items, order remains PENDING_PAYMENT for another payment attempt.
     const updatedPayment = await this.paymentsRepository.update(payment.id, {
       status: PaymentStatus.FAILED,
       paymentRef,
