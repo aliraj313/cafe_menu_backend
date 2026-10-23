@@ -167,7 +167,7 @@ export class AuthService {
   async forgotPassword(dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
     const user = await this.usersRepository.findByMobile(dto.mobile);
     const generic: ForgotPasswordResponse = {
-      message: 'If the mobile number is registered, an OTP has been sent.',
+      message: 'OTP has been sent.',
       resendAvailableInSeconds: this.configs.OTP.RESEND_COOLDOWN_SECONDS,
     };
 
