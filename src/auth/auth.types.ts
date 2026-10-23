@@ -29,5 +29,6 @@ export interface AuthTokensResponse {
 
 export interface ForgotPasswordResponse {
   message: string;
+  otp?: string;
   resendAvailableInSeconds: number;
 }

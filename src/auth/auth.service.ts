@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { createHash, randomInt } from 'crypto';
 import { OtpPurpose, UserRole } from '../generated/prisma/client';
 import { BusinessRuleException, UnauthorizedException } from '../common/exceptions/app.exception';
-import { ConfigsService } from '../config/configs.service';
+import { ConfigsService, isProduction } from '../config/configs.service';
 import { SMS_SERVICE, SmsService } from '../sms/sms.service';
 import { AuthTokensResponse, ForgotPasswordResponse } from './auth.types';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -25,7 +25,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly configs: ConfigsService,
     @Inject(SMS_SERVICE) private readonly smsService: SmsService,
-  ) {}
+  ) { }
 
   async login(dto: LoginDto): Promise<AuthTokensResponse> {
     const user = await this.usersRepository.findByMobile(dto.mobile);
@@ -83,6 +83,7 @@ export class AuthService {
 
     return {
       message: 'OTP has been sent.',
+      ...(!isProduction() && { otp }),
       resendAvailableInSeconds: this.configs.OTP.RESEND_COOLDOWN_SECONDS,
     };
   }
