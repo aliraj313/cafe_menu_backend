@@ -216,7 +216,8 @@ export class ConfigsService {
 
     this.PAYMENT = {
       PROVIDER: this.parsePaymentProvider(this.requireString('PAYMENT_PROVIDER')),
-      MOCK_ENABLED: this.requireBoolean('PAYMENT_MOCK_ENABLED'),
+      // Mock payment flows active in non-production only
+      MOCK_ENABLED: this.NODE_ENV !== 'production',
       ZARINPAL: {
         MERCHANT_ID: this.optionalNonEmptyString('ZARINPAL_MERCHANT_ID'),
         CALLBACK_URL: this.optionalUrl('ZARINPAL_CALLBACK_URL'),
@@ -229,9 +230,6 @@ export class ConfigsService {
   private assertProductionSafety(): void {
     if (this.NODE_ENV !== 'production') {
       return;
-    }
-    if (this.PAYMENT.MOCK_ENABLED) {
-      throw new Error('PAYMENT_MOCK_ENABLED must be false in production');
     }
     if (!this.PAYMENT.ZARINPAL.CALLBACK_URL) {
       throw new Error('ZARINPAL_CALLBACK_URL is required in production');
