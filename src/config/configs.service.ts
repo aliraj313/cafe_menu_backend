@@ -58,7 +58,7 @@ export class ConfigsService {
     readonly ZARINPAL: {
       readonly MERCHANT_ID: string | undefined;
       readonly CALLBACK_URL: string | undefined;
-     };
+    };
   };
 
   /** Application-wide constants (never hardcode these elsewhere). */
@@ -113,7 +113,7 @@ export class ConfigsService {
     FRONTEND_FAILURE_PATH: '/payment/failure',
   };
 
-    /** Shared business / API limits used across modules. */
+  /** Shared business / API limits used across modules. */
   readonly LIMITS = {
     PAGINATION: {
       DEFAULT_PAGE: 1,
@@ -221,7 +221,7 @@ export class ConfigsService {
       ZARINPAL: {
         MERCHANT_ID: this.optionalNonEmptyString('ZARINPAL_MERCHANT_ID'),
         CALLBACK_URL: this.optionalUrl('ZARINPAL_CALLBACK_URL'),
-       },
+      },
     };
 
     this.assertProductionSafety();
@@ -268,24 +268,6 @@ export class ConfigsService {
     }
     const normalized = String(value).trim();
     return normalized.length === 0 ? undefined : normalized;
-  }
-
-  private requireBoolean(key: string): boolean {
-    const raw = this.configService.get<unknown>(key);
-    if (typeof raw === 'boolean') {
-      return raw;
-    }
-    if (raw === undefined || raw === null) {
-      throw new Error(`Missing required environment variable: ${key}`);
-    }
-    const normalized = String(raw).toLowerCase().trim();
-    if (normalized === 'true' || normalized === '1') {
-      return true;
-    }
-    if (normalized === 'false' || normalized === '0') {
-      return false;
-    }
-    throw new Error(`Environment variable ${key} must be a boolean (true/false)`);
   }
 
   private parseIntInRange(key: string, min: number, max: number): number {
