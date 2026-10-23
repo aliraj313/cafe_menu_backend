@@ -14,8 +14,7 @@ export class ConfigsService {
   readonly PORT: number;
   readonly DATABASE_URL: string;
   readonly FRONTEND_ORIGIN: string;
-  readonly PUBLIC_MENU_BASE_URL: string;
-
+ 
   /** Fixed business timezone (not env-driven). */
   readonly BUSINESS_TIMEZONE = 'Asia/Tehran' as const;
 
@@ -147,7 +146,6 @@ export class ConfigsService {
     this.PORT = this.parsePort(this.requireString('PORT'));
     this.DATABASE_URL = this.requireNonEmptyString('DATABASE_URL');
     this.FRONTEND_ORIGIN = this.requireNonEmptyString('FRONTEND_ORIGIN');
-    this.PUBLIC_MENU_BASE_URL = this.requireNonEmptyString('PUBLIC_MENU_BASE_URL');
 
     this.JWT = {
       ACCESS: {
