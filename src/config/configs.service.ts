@@ -48,8 +48,7 @@ export class ConfigsService {
     readonly ZARINPAL: {
       readonly MERCHANT_ID: string | undefined;
       readonly CALLBACK_URL: string | undefined;
-      readonly API_BASE_URL: string | undefined;
-    };
+     };
   };
 
   /** Application-wide constants (never hardcode these elsewhere). */
@@ -72,7 +71,33 @@ export class ConfigsService {
   };
 
 
-  /** Shared business / API limits used across modules. */
+  /** WebSocket (admin realtime) constants. */
+  readonly WS = {
+    NAMESPACE: 'admin',
+    ROOM_ADMINS: 'admins',
+    EVENTS: {
+      ORDER_PAID: 'order.paid',
+    },
+  };
+
+  /** Payment-related application constants (no hardcoding elsewhere). */
+  readonly PAYMENT_APP = {
+    PROVIDER_ZARINPAL: 'zarinpal',
+    CURRENCY_IRT: 'IRT',
+    SNAPSHOT_TYPE_ORDER: 'ORDER',
+    ZARINPAL: {
+      REQUEST_PATH: '/pg/v4/payment/request.json',
+      VERIFY_PATH: '/pg/v4/payment/verify.json',
+      START_PAY_PATH: '/pg/StartPay/',
+      SANDBOX_BASE_URL: 'https://sandbox.zarinpal.com',
+      PRODUCTION_BASE_URL: 'https://payment.zarinpal.com',
+      SUCCESS_CODES: [100, 101] as const,
+    },
+    FRONTEND_SUCCESS_PATH: '/payment/success',
+    FRONTEND_FAILURE_PATH: '/payment/failure',
+  };
+
+    /** Shared business / API limits used across modules. */
   readonly LIMITS = {
     PAGINATION: {
       DEFAULT_PAGE: 1,
@@ -95,6 +120,13 @@ export class ConfigsService {
       BCRYPT_SALT_ROUNDS: 12,
       MIN_PASSWORD_LENGTH: 8,
       OTP_LENGTH: 6,
+    },
+    CART: {
+      MIN_QUANTITY: 1,
+      MAX_QUANTITY: 99,
+      MAX_ITEMS: 50,
+      /** Active cart lifetime in hours (then a new cart is created on next add). */
+      TTL_HOURS: 24,
     },
   };
 
@@ -155,8 +187,7 @@ export class ConfigsService {
       ZARINPAL: {
         MERCHANT_ID: this.optionalNonEmptyString('ZARINPAL_MERCHANT_ID'),
         CALLBACK_URL: this.optionalUrl('ZARINPAL_CALLBACK_URL'),
-        API_BASE_URL: this.optionalUrl('ZARINPAL_API_BASE_URL'),
-      },
+       },
     };
 
     this.assertProductionSafety();
@@ -172,13 +203,8 @@ export class ConfigsService {
     if (this.PAYMENT.MOCK_ENABLED) {
       throw new Error('PAYMENT_MOCK_ENABLED must be false in production');
     }
-    if (this.PAYMENT.PROVIDER === 'zarinpal') {
-      if (!this.PAYMENT.ZARINPAL.MERCHANT_ID) {
-        throw new Error('ZARINPAL_MERCHANT_ID is required when PAYMENT_PROVIDER=zarinpal in production');
-      }
-      if (!this.PAYMENT.ZARINPAL.CALLBACK_URL) {
-        throw new Error('ZARINPAL_CALLBACK_URL is required when PAYMENT_PROVIDER=zarinpal in production');
-      }
+    if (!this.PAYMENT.ZARINPAL.CALLBACK_URL) {
+      throw new Error('ZARINPAL_CALLBACK_URL is required in production');
     }
   }
 

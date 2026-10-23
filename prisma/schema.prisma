@@ -15,18 +15,44 @@ enum MealType {
 
 enum UserRole {
   ADMIN
+  CUSTOMER
+}
+
+enum OtpPurpose {
+  LOGIN
+  PASSWORD_RESET
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_FAILED
+  PROCESSING
+  CANCELLED
+}
+
+enum MockPaymentOutcome {
+  SUCCESS
+  FAILURE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 model User {
-  id                Int                @id @default(autoincrement())
-  mobile            String             @unique
-  passwordHash      String
-  role              UserRole           @default(ADMIN)
-  isActive          Boolean            @default(true)
-  refreshTokens     RefreshToken[]
-  otps              Otp[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id           Int            @id @default(autoincrement())
+  mobile       String         @unique
+  passwordHash String?
+  role         UserRole       @default(CUSTOMER)
+  isActive     Boolean        @default(true)
+  refreshTokens RefreshToken[]
+  otps         Otp[]
+  carts        Cart[]
+  orders       Order[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([role])
 }
@@ -44,15 +70,18 @@ model RefreshToken {
 }
 
 model Otp {
-  id           Int       @id @default(autoincrement())
-  userId       Int
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           Int        @id @default(autoincrement())
+  mobile       String
+  purpose      OtpPurpose
+  userId       Int?
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   codeHash     String
   expiresAt    DateTime
-  attemptCount Int       @default(0)
+  attemptCount Int        @default(0)
   consumedAt   DateTime?
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime   @default(now())
 
+  @@index([mobile, purpose])
   @@index([userId])
 }
 
@@ -65,36 +94,118 @@ model Category {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   description String?
   price       BigInt
-  images      String[] @default([])
+  images      String[]   @default([])
   mealType    MealType
-  isAvailable Boolean  @default(true)
+  isAvailable Boolean    @default(true)
   categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cartItems   CartItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([categoryId])
   @@index([mealType])
   @@index([isAvailable])
 }
 
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  items     CartItem[]
+  orders    Order[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  cartId      Int?
+  cart        Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  status      OrderStatus @default(PENDING_PAYMENT)
+  totalAmount BigInt
+  items       OrderItem[]
+  payments    Payment[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+  @@index([cartId])
+  @@index([userId])
+}
+
+model Payment {
+  id             Int           @id @default(autoincrement())
+  orderId        Int
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status         PaymentStatus @default(PENDING)
+  amount         BigInt
+  provider       String
+  paymentRef     String?
+  paymentUrl     String?
+  authority      String?       @unique
+  /// Snapshot of what this payment is for (order items, amounts, type). Used at verify time.
+  snapshot       Json?
+  failureReason  String?
+  verifiedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderItem {
+  id          Int    @id @default(autoincrement())
+  orderId     Int
+  order       Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   Int
+  productName String
+  unitPrice   BigInt
+  quantity    Int
+  lineTotal   BigInt
+
+  @@index([orderId])
+}
+
 model Settings {
-  id                       Int      @id @default(autoincrement())
-  cafeName                 String
-  slogan                   String?
-  logoUrl                  String?
-  description              String?
-  phone                    String?
-  workingHours             String?
-  address                  String?
-  instagramUrl             String?
-  telegramUrl              String?
-  zarinpalMerchant         String?
-  theme                    Json?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  cafeName         String
+  slogan           String?
+  logoUrl          String?
+  description      String?
+  phone            String?
+  workingHours     String?
+  address          String?
+  instagramUrl     String?
+  telegramUrl      String?
+  zarinpalMerchant String?
+  theme            Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
