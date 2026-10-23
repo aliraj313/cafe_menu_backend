@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PaymentStatus } from '../generated/prisma/client';
+import { PaymentStatus, Prisma } from '../generated/prisma/client';
 import {
   BusinessRuleException,
   ForbiddenException,
@@ -8,6 +8,10 @@ import {
 import { ConfigsService } from '../config/configs.service';
 import { CartsService } from '../carts/carts.service';
 import { PaymentsRepository } from '../payments/payments.repository';
+import { ZarinpalService } from '../payments/zarinpal/zarinpal.service';
+import { PaymentSnapshot } from '../payments/zarinpal/zarinpal.types';
+import { SettingsRepository } from '../settings/settings.repository';
+import { UsersRepository } from '../auth/users.repository';
 import {
   CheckoutResponse,
   OrderResponse,
@@ -22,13 +26,12 @@ export class OrdersService {
     private readonly ordersRepository: OrdersRepository,
     private readonly cartsService: CartsService,
     private readonly paymentsRepository: PaymentsRepository,
+    private readonly zarinpalService: ZarinpalService,
+    private readonly settingsRepository: SettingsRepository,
+    private readonly usersRepository: UsersRepository,
     private readonly configs: ConfigsService,
   ) {}
 
-  /**
-   * Ensures an open order exists for the active cart and always creates a new PENDING payment.
-   * paymentUrl is reserved for the real gateway integration in a later step.
-   */
   async checkout(userId: number): Promise<CheckoutResponse> {
     const cart = await this.cartsService.requireActiveCartEntity(userId);
 
@@ -69,13 +72,55 @@ export class OrdersService {
       });
     }
 
+    const user = await this.usersRepository.findById(userId);
+    const merchantId = await this.resolveMerchantId();
+    const callbackUrl = this.resolveCallbackUrl();
+    const amountNumber = Number(order.totalAmount);
+    if (!Number.isSafeInteger(amountNumber) || amountNumber <= 0) {
+      throw new BusinessRuleException('INVALID_PAYMENT_AMOUNT', 'Order amount is invalid for payment.');
+    }
+
+    const description = `Order #${order.id}`;
+    const snapshot: PaymentSnapshot = {
+      type: this.configs.PAYMENT_APP.SNAPSHOT_TYPE_ORDER,
+      orderId: order.id,
+      userId,
+      cartId: order.cartId,
+      amount: order.totalAmount.toString(),
+      currency: this.configs.PAYMENT_APP.CURRENCY_IRR,
+      description,
+      items: order.items.map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        unitPrice: item.unitPrice.toString(),
+        quantity: item.quantity,
+        lineTotal: item.lineTotal.toString(),
+      })),
+    };
+
+    const zarinpalResult = await this.zarinpalService.requestPayment({
+      merchant_id: merchantId,
+      amount: amountNumber,
+      callback_url: callbackUrl,
+      description,
+      currency: this.configs.PAYMENT_APP.CURRENCY_IRR,
+      metadata: {
+        mobile: user?.mobile,
+        order_id: String(order.id),
+      },
+    });
+
+    const paymentUrl = this.zarinpalService.buildStartPayUrl(zarinpalResult.authority);
+
     const payment = await this.paymentsRepository.create({
       orderId: order.id,
       status: PaymentStatus.PENDING,
       amount: order.totalAmount,
-      provider: this.configs.PAYMENT_APP.MOCK_PROVIDER,
+      provider: this.configs.PAYMENT_APP.PROVIDER_ZARINPAL,
       paymentRef: null,
-      paymentUrl: null,
+      paymentUrl,
+      authority: zarinpalResult.authority,
+      snapshot: snapshot as unknown as Prisma.InputJsonValue,
       failureReason: null,
     });
 
@@ -101,14 +146,30 @@ export class OrdersService {
     return toOrderResponse(order);
   }
 
-  async requireOwnedOrder(orderId: number, userId: number) {
-    const order = await this.ordersRepository.findById(orderId);
-    if (!order) {
-      throw new NotFoundException('ORDER_NOT_FOUND', 'Order was not found.');
+  private async resolveMerchantId(): Promise<string> {
+    const settings = await this.settingsRepository.findById(this.configs.SETTINGS.SINGLETON_ID);
+    const fromSettings = settings?.zarinpalMerchant?.trim();
+    if (fromSettings) {
+      return fromSettings;
     }
-    if (order.userId !== userId) {
-      throw new ForbiddenException('ORDER_FORBIDDEN', 'You do not own this order.');
+    const fromEnv = this.configs.PAYMENT.ZARINPAL.MERCHANT_ID;
+    if (fromEnv) {
+      return fromEnv;
     }
-    return order;
+    throw new BusinessRuleException(
+      'ZARINPAL_MERCHANT_MISSING',
+      'Zarinpal merchant id is not configured.',
+    );
+  }
+
+  private resolveCallbackUrl(): string {
+    const configured = this.configs.PAYMENT.ZARINPAL.CALLBACK_URL;
+    if (!configured) {
+      throw new BusinessRuleException(
+        'ZARINPAL_CALLBACK_MISSING',
+        'ZARINPAL_CALLBACK_URL is not configured.',
+      );
+    }
+    return configured;
   }
 }

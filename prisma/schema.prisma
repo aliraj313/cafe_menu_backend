@@ -168,7 +168,11 @@ model Payment {
   provider       String
   paymentRef     String?
   paymentUrl     String?
+  authority      String?       @unique
+  /// Snapshot of what this payment is for (order items, amounts, type). Used at verify time.
+  snapshot       Json?
   failureReason  String?
+  verifiedAt     DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 

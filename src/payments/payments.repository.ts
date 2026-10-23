@@ -14,6 +14,10 @@ export class PaymentsRepository {
     return this.prisma.payment.findUnique({ where: { id } });
   }
 
+  findByAuthority(authority: string): Promise<Payment | null> {
+    return this.prisma.payment.findUnique({ where: { authority } });
+  }
+
   update(id: number, data: Prisma.PaymentUpdateInput): Promise<Payment> {
     return this.prisma.payment.update({
       where: { id },
