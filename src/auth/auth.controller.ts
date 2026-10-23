@@ -31,10 +31,11 @@ export class AuthController {
 
   @Public()
   @Post('logout')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke a refresh token' })
-  async logout(@Body() dto: RefreshTokenDto): Promise<void> {
+  async logout(@Body() dto: RefreshTokenDto): Promise<{ message: string }> {
     await this.authService.logout(dto.refreshToken);
+    return { message: 'Logged out successfully.' };
   }
 
   @Public()

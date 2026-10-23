@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
 import { AppExceptionFilter } from './common/filters/app-exception.filter';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ConfigsService } from './config/configs.service';
 
 async function bootstrap(): Promise<void> {
@@ -28,6 +29,7 @@ async function bootstrap(): Promise<void> {
   );
 
   app.useGlobalFilters(new AppExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.enableCors({
     origin: configs.FRONTEND_ORIGIN,

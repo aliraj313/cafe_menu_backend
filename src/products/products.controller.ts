@@ -55,9 +55,9 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a product' })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    await this.productsService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number): Promise<ProductResponse> {
+    return this.productsService.remove(id);
   }
 }

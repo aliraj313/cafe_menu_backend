@@ -55,9 +55,9 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a category' })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    await this.categoriesService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number): Promise<Category> {
+    return this.categoriesService.remove(id);
   }
 }

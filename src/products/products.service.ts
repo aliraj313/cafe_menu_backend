@@ -95,9 +95,10 @@ export class ProductsService {
     return toProductResponse(product);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.findOne(id);
+  async remove(id: number): Promise<ProductResponse> {
+    const product = await this.findOne(id);
     await this.productsRepository.delete(id);
+    return product;
   }
 
   private async ensureCategoryExists(categoryId: number): Promise<void> {

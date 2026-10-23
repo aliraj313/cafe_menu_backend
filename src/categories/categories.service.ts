@@ -75,8 +75,8 @@ export class CategoriesService {
     });
   }
 
-  async remove(id: number): Promise<void> {
-    await this.findOne(id);
+  async remove(id: number): Promise<Category> {
+    const category = await this.findOne(id);
     const productCount = await this.categoriesRepository.countProducts(id);
     if (productCount > 0) {
       throw new ConflictException(
@@ -85,5 +85,6 @@ export class CategoriesService {
       );
     }
     await this.categoriesRepository.delete(id);
+    return category;
   }
 }
