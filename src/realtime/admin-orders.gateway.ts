@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import { UserRole } from '../generated/prisma/client';
 import { ConfigsService } from '../config/configs.service';
 import { AccessTokenPayload } from '../auth/auth.types';
@@ -22,11 +22,13 @@ import { OrderResponse } from '../orders/order.mapper';
     credentials: true,
   },
 })
-export class AdminOrdersGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class AdminOrdersGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(AdminOrdersGateway.name);
 
   @WebSocketServer()
-  server!: Server;
+  server!: Namespace;
 
   constructor(
     private readonly jwtService: JwtService,
@@ -34,9 +36,7 @@ export class AdminOrdersGateway implements OnGatewayInit, OnGatewayConnection, O
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  afterInit(server: Server): void {
-    // Restrict browser origins to configured frontend when possible.
-    server.engine.on('initial_headers', () => undefined);
+  afterInit(): void {
     this.logger.log(
       `Admin websocket ready on namespace /${this.configs.WS.NAMESPACE}`,
     );
@@ -87,7 +87,9 @@ export class AdminOrdersGateway implements OnGatewayInit, OnGatewayConnection, O
 
   handleDisconnect(@ConnectedSocket() client: Socket): void {
     const userId = (client.data as { user?: { id: number } })?.user?.id;
-    this.logger.log(`Client disconnected: ${client.id}${userId ? ` (admin ${userId})` : ''}`);
+    this.logger.log(
+      `Client disconnected: ${client.id}${userId ? ` (admin ${userId})` : ''}`,
+    );
   }
 
   /**
@@ -104,7 +106,9 @@ export class AdminOrdersGateway implements OnGatewayInit, OnGatewayConnection, O
         success: true,
         data: order,
       });
-    this.logger.log(`Emitted ${this.configs.WS.EVENTS.ORDER_PAID} for order ${order.id}`);
+    this.logger.log(
+      `Emitted ${this.configs.WS.EVENTS.ORDER_PAID} for order ${order.id}`,
+    );
   }
 
   private extractToken(client: Socket): string | null {
@@ -128,7 +132,10 @@ export class AdminOrdersGateway implements OnGatewayInit, OnGatewayConnection, O
 
   private disconnectUnauthorized(client: Socket, reason: string): void {
     this.logger.warn(`WS unauthorized (${client.id}): ${reason}`);
-    client.emit('error', { success: false, error: { code: 'WS_UNAUTHORIZED', message: reason } });
+    client.emit('error', {
+      success: false,
+      error: { code: 'WS_UNAUTHORIZED', message: reason },
+    });
     client.disconnect(true);
   }
 }
