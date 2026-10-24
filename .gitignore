@@ -42,5 +42,5 @@ prisma/*.db-journal
 # Prisma generated client
 src/generated/
 
-# Uploaded files on disk
-storage/
+# Uploaded files on disk (project root only)
+/storage/
