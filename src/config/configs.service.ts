@@ -111,6 +111,22 @@ export class ConfigsService {
     FRONTEND_FAILURE_PATH: '/payment/failure',
   };
 
+  /** Disk upload / static file serving. */
+  readonly STORAGE = {
+    /** Directory under process.cwd() */
+    ROOT_DIR: 'storage',
+    /** Public URL path prefix for served files */
+    PUBLIC_PATH: '/storage',
+    MAX_FILE_BYTES: 5 * 1024 * 1024,
+    FIELD_NAME: 'file',
+    ALLOWED_MIME_TYPES: [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+    ] as const,
+  };
+
   /** Shared business / API limits used across modules. */
   readonly LIMITS = {
     PAGINATION: {
