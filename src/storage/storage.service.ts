@@ -8,12 +8,8 @@ import { BusinessRuleException } from '../common/exceptions/app.exception';
 import { ConfigsService } from '../config/configs.service';
 
 export interface UploadedFileResult {
-  /** Public path, e.g. /storage/uuid.jpg */
+  /** Absolute public URL, e.g. http://backend/storage/uuid.jpg */
   url: string;
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
 }
 
 @Injectable()
@@ -66,15 +62,10 @@ export class StorageService implements OnModuleInit {
       throw new BusinessRuleException('FILE_EMPTY', 'Uploaded file is empty.');
     }
 
-    const publicPath = `${this.configs.STORAGE.PUBLIC_PATH}/${filename}`;
+    const pathPart = `${this.configs.STORAGE.PUBLIC_PATH}/${filename}`;
+    const url = `${this.configs.BACKEND_URL}${pathPart}`;
 
-    return {
-      url: publicPath,
-      filename,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      size: file.size,
-    };
+    return { url };
   }
 
   private resolveExtension(originalName: string, mimeType: string): string {

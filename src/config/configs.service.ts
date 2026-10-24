@@ -14,6 +14,8 @@ export class ConfigsService {
   readonly PORT: number;
   readonly DATABASE_URL: string;
   readonly FRONTEND_ORIGIN: string;
+  /** Public base URL of this backend (e.g. https://api.example.com) — no trailing slash. */
+  readonly BACKEND_URL: string;
 
   /** Fixed business timezone (not env-driven). */
   readonly BUSINESS_TIMEZONE = 'Asia/Tehran' as const;
@@ -160,6 +162,7 @@ export class ConfigsService {
     this.PORT = this.parsePort(this.requireString('PORT'));
     this.DATABASE_URL = this.requireNonEmptyString('DATABASE_URL');
     this.FRONTEND_ORIGIN = this.requireNonEmptyString('FRONTEND_ORIGIN');
+    this.BACKEND_URL = this.requireUrl('BACKEND_URL').replace(/\/$/, '');
 
     this.JWT = {
       ACCESS: {
@@ -302,6 +305,17 @@ export class ConfigsService {
     }
     try {
       // Allow localhost and non-TLD URLs used in development.
+      // eslint-disable-next-line no-new
+      new URL(value);
+    } catch {
+      throw new Error(`Environment variable ${key} must be a valid URL`);
+    }
+    return value;
+  }
+
+  private requireUrl(key: string): string {
+    const value = this.requireNonEmptyString(key);
+    try {
       // eslint-disable-next-line no-new
       new URL(value);
     } catch {
